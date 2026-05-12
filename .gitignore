@@ -1,0 +1,22 @@
+# Laravel
+/vendor
+/node_modules
+/storage/*.key
+.env
+.env.*
+
+# logs
+/storage/logs
+*.log
+
+# Docker
+/.docker
+/docker-compose.override.yml
+
+# OS / IDE
+.vscode
+.DS_Store
+.idea
+
+# cache
+/bootstrap/cache/*.php
