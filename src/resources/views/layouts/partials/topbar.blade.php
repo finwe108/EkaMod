@@ -29,7 +29,9 @@
 
             if ($user && $user->roles->contains('name', 'student') && $user->student) {
                 $student = $user->student;
-                $currentEnrollment = $student->currentEnrollment()->first();
+
+                $currentEnrollment = $student->currentEnrollment()->first()
+                    ?: $student->latestEnrollment()->first();
 
                 $gradeLevelId = $currentEnrollment?->grade_level_id;
                 $studentType = $currentEnrollment?->student_type;
@@ -60,19 +62,37 @@
                     ->count();
             }
 
-            if ($user && !$user->roles->contains('name', 'student')) {
+            if ($user && ! $user->roles->contains('name', 'student')) {
                 $pendingDocumentVerificationCount = \App\Models\StudentDocument::query()
                     ->where('status', 'submitted')
                     ->where('is_verified', false)
                     ->count();
             }
 
-            $topbarNotificationCount = $unreadCount + $missingDocumentCount + $pendingDocumentVerificationCount;
+            $topbarNotificationCount = $unreadCount
+                + $missingDocumentCount
+                + $pendingDocumentVerificationCount;
+
+            /*
+             * Route the bell to the source of the count.
+             *
+             * Student missing documents should open the student document page.
+             * Admin pending document verification should open verification page.
+             * Otherwise, open the normal notification list.
+             */
+            if ($missingDocumentCount > 0 && Route::has('student.documents.index')) {
+                $notificationUrl = route('student.documents.index');
+            } elseif ($pendingDocumentVerificationCount > 0 && Route::has('admin.student-documents.index')) {
+                $notificationUrl = route('admin.student-documents.index');
+            } else {
+                $notificationUrl = route('notifications.index');
+            }
         @endphp
 
-
         <div class="notification-wrapper">
-            <a href="{{ $missingDocumentCount > 0 ? route('student.documents.index') : route('notifications.index') }}" class="notif-btn">
+            <a href="{{ $notificationUrl }}"
+               class="notif-btn"
+               title="Unread: {{ $unreadCount }}, Missing docs: {{ $missingDocumentCount }}, Pending verification: {{ $pendingDocumentVerificationCount }}">
                 🔔
 
                 @if($topbarNotificationCount > 0)
@@ -80,6 +100,11 @@
                 @endif
             </a>
         </div>
+
+        <button type="button" id="theme-toggle" class="btn btn-ghost" title="Toggle theme">
+            <span id="theme-toggle-icon">🌙</span>
+            <span id="theme-toggle-text">Dark</span>
+        </button>
 
         @auth
             <div class="topbar-user-dropdown" id="topbarUserDropdown">
@@ -121,7 +146,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     toggle.addEventListener('click', function (e) {
         e.stopPropagation();
+
         const isOpen = dropdown.classList.toggle('open');
+
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     });
 

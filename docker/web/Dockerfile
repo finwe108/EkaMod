@@ -1,13 +1,17 @@
 FROM php:8.3-apache
 
-# Enable Apache rewrite (required for Laravel routes)
+# Copy Composer from the official Composer image
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Enable Apache rewrite required for Laravel routes
 RUN a2enmod rewrite
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     libzip-dev zip unzip git curl \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
-    libicu-dev libonig-dev libxml2-dev
+    libicu-dev libonig-dev libxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions required by Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \

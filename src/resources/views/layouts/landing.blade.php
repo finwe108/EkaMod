@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {{-- Dynamic title --}}
-    <title>@yield('title', config('school.name'))</title>
+    <title>@yield('title', $schoolName)</title>
 
     {{-- SEO --}}
-    <meta name="description" content="@yield('meta_description', config('school.name') . ' official website')">
+    <meta name="description" content="@yield('meta_description', $schoolName . ' official website')">
 
     {{-- CSS --}}
     <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}?v={{ time() }}">
@@ -20,7 +20,7 @@
 <body class="@yield('body_class')">
 
     {{-- TOPBAR --}}
-    @include('public_site.partials.header')
+    @include('public_site::partials.header')
 
     {{-- MAIN CONTENT --}}
     <main>
@@ -28,7 +28,7 @@
     </main>
 
     {{-- FOOTER --}}
-    @include('public_site.partials.footer')
+    @include('public_site::partials.footer')
     @stack('scripts')
 
 </body>

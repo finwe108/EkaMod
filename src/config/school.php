@@ -2,13 +2,13 @@
 
 return [
 
-    'name' => 'Madana Mohana Colleges, Inc.',
-    'short' => 'MMCi',
-    'tagline' => 'The first step in the right direction.',
-    'phone' => '+63 917 314 6499',
-    'email' => 'registrar@madanamohanacolleges.com',
+    'name' => 'EkaMod School Management System',
+    'short_name' => 'EkaMod',
+    'tagline' => 'Digital solutions for modern education.',
+    'phone' => '+63 927 339 0859',
+    'email' => 'info@ekamod.com',
     'address' => 'Kibawe, Bukidnon, Philippines',
-    'domain' => 'madanamohanacolleges.com',
+    'domain' => 'ekamod.com',
 
     // 🔹 STATS
     'stats' => [

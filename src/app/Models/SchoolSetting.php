@@ -13,6 +13,12 @@ class SchoolSetting extends Model
         'district',
         'school_name',
         'school_head_name',
+        'logo_path',
+        'short_name',
+        'tagline',
+        'phone',
+        'email',
+        'address',
     ];
 
     public static function current(): self
@@ -24,6 +30,12 @@ class SchoolSetting extends Model
             'district' => '',
             'school_name' => '',
             'school_head_name' => '',
+            'logo_path' => '',
+            'short_name' => '',
+            'tagline' => '',
+            'phone' => '',
+            'email' => '',
+            'address' => '',
         ]);
     }
 }
