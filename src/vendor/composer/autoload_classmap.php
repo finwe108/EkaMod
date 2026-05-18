@@ -3779,6 +3779,7 @@ return array(
     'Modules\\Announcements\\Actions\\DeleteAnnouncementAction' => $baseDir . '/Modules/Announcements/Actions/DeleteAnnouncementAction.php',
     'Modules\\Announcements\\Actions\\UpdateAnnouncementAction' => $baseDir . '/Modules/Announcements/Actions/UpdateAnnouncementAction.php',
     'Modules\\Announcements\\Http\\Controllers\\AnnouncementController' => $baseDir . '/Modules/Announcements/Http/Controllers/AnnouncementController.php',
+    'Modules\\Announcements\\Http\\Controllers\\Public\\PublicAnnouncementController' => $baseDir . '/Modules/Announcements/Http/Controllers/Public/PublicAnnouncementController.php',
     'Modules\\Announcements\\Providers\\AnnouncementsServiceProvider' => $baseDir . '/Modules/Announcements/Providers/AnnouncementsServiceProvider.php',
     'Modules\\Announcements\\Requests\\StoreAnnouncementRequest' => $baseDir . '/Modules/Announcements/Requests/StoreAnnouncementRequest.php',
     'Modules\\Announcements\\Requests\\UpdateAnnouncementRequest' => $baseDir . '/Modules/Announcements/Requests/UpdateAnnouncementRequest.php',

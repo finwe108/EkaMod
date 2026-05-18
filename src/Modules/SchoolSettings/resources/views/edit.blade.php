@@ -67,7 +67,7 @@
                         id="school_name"
                         class="form-input"
                         value="{{ old('school_name', $schoolSetting->school_name) }}"
-                        placeholder="Madana Mohana Colleges, Inc."
+                        placeholder="Official school name"
                     >
                     @error('school_name') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
@@ -80,7 +80,7 @@
                         id="short_name"
                         class="form-input"
                         value="{{ old('short_name', $schoolSetting->short_name ?? '') }}"
-                        placeholder="MMCI"
+                        placeholder="School short name"
                     >
                     @error('short_name') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
@@ -93,7 +93,7 @@
                         id="tagline"
                         class="form-input"
                         value="{{ old('tagline', $schoolSetting->tagline ?? '') }}"
-                        placeholder="The first step in the right direction."
+                        placeholder="School tagline"
                     >
                     @error('tagline') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
@@ -192,7 +192,7 @@
                         id="phone"
                         class="form-input"
                         value="{{ old('phone', $schoolSetting->phone ?? '') }}"
-                        placeholder="+63 917 314 6499"
+                        placeholder="school contact number"
                     >
                     @error('phone') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
@@ -205,7 +205,7 @@
                         id="email"
                         class="form-input"
                         value="{{ old('email', $schoolSetting->email ?? '') }}"
-                        placeholder="registrar@madanamohanacolleges.com"
+                        placeholder="school email"
                     >
                     @error('email') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
@@ -218,7 +218,7 @@
                         id="address"
                         class="form-input"
                         value="{{ old('address', $schoolSetting->address ?? '') }}"
-                        placeholder="Kibawe, Bukidnon, Philippines"
+                        placeholder="school address"
                     >
                     @error('address') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
