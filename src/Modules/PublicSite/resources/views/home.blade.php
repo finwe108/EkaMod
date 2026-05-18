@@ -185,14 +185,38 @@
         </div>
 
         <div class="news-grid">
-            @foreach(config('school.news', []) as $item)
+            @forelse($announcements as $announcement)
                 <article class="news-card">
-                    <span>{{ $item['date'] }} / {{ $item['type'] }}</span>
-                    <h3>{{ $item['title'] }}</h3>
-                    <a href="{{ $item['href'] }}">Read more</a>
+                    <span>
+                        {{ optional($announcement->created_at)->format('M d, Y') }}
+                        / Announcement
+                    </span>
+
+                    <h3>{{ $announcement->title }}</h3>
+
+                    <p>
+                        {{ \Illuminate\Support\Str::limit($announcement->content, 120) }}
+                    </p>
+
+                    <a href="{{ route('public.news.show', $announcement) }}">
+                        Read more
+                    </a>
                 </article>
-            @endforeach
+            @empty
+                <article class="news-card">
+                    <span>Updates</span>
+                    <h3>No announcements yet</h3>
+                    <p>Please check back soon for school updates.</p>
+                </article>
+            @endforelse
         </div>
+
+        <div style="margin-top: 20px;">
+            <a class="button button--secondary" href="{{ route('public.news.index') }}">
+                View all announcements
+            </a>
+        </div>
+        
     </div>
 </section>
 

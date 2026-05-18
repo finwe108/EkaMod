@@ -3,6 +3,7 @@
 namespace Modules\PublicSite\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Announcement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -21,7 +22,10 @@ class PublicPageController extends Controller
      */
     public function home(): View
     {
-        return view('public_site::home');
+        $announcements = Announcement::latest()
+            ->take(3)
+            ->get();        
+        return view('public_site::home', compact('announcements'));
     }
 
     /**

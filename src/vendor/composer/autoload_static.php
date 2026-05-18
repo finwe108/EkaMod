@@ -4372,6 +4372,7 @@ class ComposerStaticInit5d883b04839cc6f22f622a551726ec79
         'Modules\\Announcements\\Actions\\DeleteAnnouncementAction' => __DIR__ . '/../..' . '/Modules/Announcements/Actions/DeleteAnnouncementAction.php',
         'Modules\\Announcements\\Actions\\UpdateAnnouncementAction' => __DIR__ . '/../..' . '/Modules/Announcements/Actions/UpdateAnnouncementAction.php',
         'Modules\\Announcements\\Http\\Controllers\\AnnouncementController' => __DIR__ . '/../..' . '/Modules/Announcements/Http/Controllers/AnnouncementController.php',
+        'Modules\\Announcements\\Http\\Controllers\\Public\\PublicAnnouncementController' => __DIR__ . '/../..' . '/Modules/Announcements/Http/Controllers/Public/PublicAnnouncementController.php',
         'Modules\\Announcements\\Providers\\AnnouncementsServiceProvider' => __DIR__ . '/../..' . '/Modules/Announcements/Providers/AnnouncementsServiceProvider.php',
         'Modules\\Announcements\\Requests\\StoreAnnouncementRequest' => __DIR__ . '/../..' . '/Modules/Announcements/Requests/StoreAnnouncementRequest.php',
         'Modules\\Announcements\\Requests\\UpdateAnnouncementRequest' => __DIR__ . '/../..' . '/Modules/Announcements/Requests/UpdateAnnouncementRequest.php',
