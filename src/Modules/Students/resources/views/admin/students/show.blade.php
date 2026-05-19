@@ -85,6 +85,7 @@
     <button type="button" class="tab-btn" data-tab="contact">Contact</button>
     <button type="button" class="tab-btn" data-tab="guardian">Parent / Guardian</button>
     <button type="button" class="tab-btn" data-tab="account">Account</button>
+    <button type="button" class="tab-btn" data-tab="documents">Documents</button>
     <button type="button" class="tab-btn" data-tab="enrollments">Enrollments</button>
 </div>
 
@@ -239,6 +240,262 @@
                     <strong>Create Student Account</strong> to generate a username and temporary password.
                 </div>
             @endunless
+        </div>
+    </div>
+</div>
+
+{{-- DOCUMENTS TAB --}}
+<div class="tab-content" id="tab-documents">
+    <div class="card">
+        <div class="card-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; gap:1rem; flex-wrap:wrap;">
+                <div>
+                    <h3 style="margin:0;">Required Documents</h3>
+                    <p style="margin:.25rem 0 0; color:var(--muted);">
+                        These are based on the student's current grade level and student type.
+                    </p>
+                </div>
+
+                @if(Route::has('admin.student-documents.index'))
+                    <a href="{{ route('admin.student-documents.index', ['q' => $student->student_id]) }}" class="btn btn-primary">
+                        Verification Center
+                    </a>
+                @endif
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                            <th>File</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($documentRules ?? [] as $rule)
+                            @php
+                                $documentType = $rule->documentType;
+
+                                $document = $documentType
+                                    ? (($studentDocuments ?? collect())[$documentType->id] ?? null)
+                                    : null;
+
+                                $status = $document ? $document->status : 'missing';
+
+                                $badgeClass = match ($status) {
+                                    'verified' => 'badge-green',
+                                    'submitted' => 'badge-amber',
+                                    'rejected' => 'badge-red',
+                                    default => 'badge-red',
+                                };
+
+                                $statusLabel = match ($status) {
+                                    'verified' => 'Verified',
+                                    'submitted' => 'Submitted',
+                                    'rejected' => 'Rejected',
+                                    default => 'Missing',
+                                };
+                            @endphp
+
+                            <tr>
+                                <td>
+                                    <strong>{{ $documentType?->name ?? 'Unknown Document' }}</strong>
+
+                                    @if($rule->student_type)
+                                        <div class="text-muted" style="font-size:11px; margin-top:3px;">
+                                            Required for: {{ ucfirst(str_replace('_', ' ', $rule->student_type)) }}
+                                        </div>
+                                    @endif
+
+                                    @if($rule->gradeLevel)
+                                        <div class="text-muted" style="font-size:11px; margin-top:3px;">
+                                            Grade: {{ $rule->gradeLevel->name }}
+                                        </div>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    <span class="badge {{ $badgeClass }}">
+                                        {{ $statusLabel }}
+                                    </span>
+
+                                    @if($document?->is_verified)
+                                        <div class="text-muted" style="font-size:11px; margin-top:4px;">
+                                            Verified {{ optional($document->verified_at)->format('M d, Y') }}
+                                        </div>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    {{ $document?->source ? ucfirst(str_replace('_', ' ', $document->source)) : '—' }}
+                                </td>
+
+                                <td>
+                                    @if($document?->file_path)
+                                        <a href="{{ asset($document->file_path) }}" target="_blank">
+                                            View file
+                                        </a>
+
+                                        @if($document->original_filename)
+                                            <div class="text-muted" style="font-size:11px; margin-top:4px;">
+                                                {{ $document->original_filename }}
+                                            </div>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">No file uploaded</span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    {{ $document?->remarks ?? '—' }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5">
+                                    No required document rules found for this student.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+        <div class="card-body">
+            <h3 style="margin-top:0;">All Student Document Types</h3>
+
+            <p style="color:var(--muted); margin-top:-6px;">
+                Admin can upload any active document type for this student, even if it is not required by current student-side rules.
+            </p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Document Type</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                            <th>File</th>
+                            <th>Remarks</th>
+                            <th style="width:280px;">Admin Upload</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($documentTypes ?? [] as $documentType)
+                            @php
+                                $document = ($studentDocuments ?? collect())[$documentType->id] ?? null;
+
+                                $status = $document ? $document->status : 'not_uploaded';
+
+                                $badgeClass = match ($status) {
+                                    'verified' => 'badge-green',
+                                    'submitted' => 'badge-amber',
+                                    'rejected' => 'badge-red',
+                                    default => 'badge-red',
+                                };
+
+                                $statusLabel = match ($status) {
+                                    'verified' => 'Verified',
+                                    'submitted' => 'Submitted',
+                                    'rejected' => 'Rejected',
+                                    default => 'Not Uploaded',
+                                };
+                            @endphp
+
+                            <tr>
+                                <td>
+                                    <strong>{{ $documentType->name }}</strong>
+
+                                    @if($documentType->description)
+                                        <div class="text-muted" style="font-size:11px; margin-top:3px;">
+                                            {{ $documentType->description }}
+                                        </div>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    <span class="badge {{ $badgeClass }}">
+                                        {{ $statusLabel }}
+                                    </span>
+
+                                    @if($document?->is_verified)
+                                        <div class="text-muted" style="font-size:11px; margin-top:4px;">
+                                            Verified {{ optional($document->verified_at)->format('M d, Y') }}
+                                        </div>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    {{ $document?->source ? ucfirst(str_replace('_', ' ', $document->source)) : '—' }}
+                                </td>
+
+                                <td>
+                                    @if($document?->file_path)
+                                        <a href="{{ asset($document->file_path) }}" target="_blank">
+                                            View file
+                                        </a>
+
+                                        @if($document->original_filename)
+                                            <div class="text-muted" style="font-size:11px; margin-top:4px;">
+                                                {{ $document->original_filename }}
+                                            </div>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">No file uploaded</span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    {{ $document?->remarks ?? '—' }}
+                                </td>
+
+                                <td>
+                                    @if(Route::has('admin.students.document-types.upload'))
+                                        <form method="POST"
+                                              action="{{ route('admin.students.document-types.upload', [$student, $documentType]) }}"
+                                              enctype="multipart/form-data">
+                                            @csrf
+
+                                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                                <input type="file"
+                                                       name="file"
+                                                       class="form-input"
+                                                       accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                                       required>
+
+                                                <input type="text"
+                                                       name="remarks"
+                                                       class="form-input"
+                                                       placeholder="Remarks (optional)">
+
+                                                <button type="submit" class="btn btn-primary">
+                                                    {{ $document ? 'Replace File' : 'Upload File' }}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6">
+                                    No active document types found.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

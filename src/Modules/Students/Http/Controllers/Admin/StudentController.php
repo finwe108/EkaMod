@@ -3,6 +3,8 @@
 namespace Modules\Students\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DocumentRequirementRule;
+use App\Models\DocumentType;
 use App\Models\GradeLevel;
 use App\Models\SchoolYear;
 use App\Models\Section;
@@ -133,9 +135,55 @@ class StudentController extends Controller
             ->with(['gradeLevel', 'section'])
             ->first();
 
+        $displayEnrollment = $currentEnrollment
+            ?: $student->latestEnrollment()
+                ->with(['schoolYear', 'gradeLevel', 'section'])
+                ->first();
+
+        $gradeLevelId = $displayEnrollment?->grade_level_id;
+        $studentType = $displayEnrollment?->student_type;
+        $documentTypes = DocumentType::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        $documentRules = DocumentRequirementRule::with(['documentType', 'gradeLevel'])
+            ->where('is_required', true)
+            ->whereHas('documentType', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->where(function ($query) use ($gradeLevelId) {
+                $query->whereNull('grade_level_id')
+                    ->orWhere('grade_level_id', $gradeLevelId);
+            })
+            ->where(function ($query) use ($studentType) {
+                $query->whereNull('student_type')
+                    ->orWhere('student_type', $studentType);
+            })
+            ->get()
+            ->unique('document_type_id')
+            ->values();
+
+        $studentDocuments = $student->documents()
+            ->with('documentType')
+            ->get()
+            ->keyBy('document_type_id');
+
+        $student->load([
+            'user',
+            'enrollments.schoolYear',
+            'enrollments.gradeLevel',
+            'enrollments.section',
+        ]);
+
         return view('students::admin.students.show', compact(
             'student',
-            'currentEnrollment'
+            'currentEnrollment',
+            'displayEnrollment',
+            'documentRules',
+            'studentDocuments',
+            'documentTypes'
         ));
     }
 
