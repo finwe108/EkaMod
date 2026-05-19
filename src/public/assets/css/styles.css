@@ -1564,3 +1564,37 @@ h3 {
 .topbar__actions .account-menu button:hover {
     background: var(--purple-soft) !important;
 }
+
+/* ********* */
+/* News Page */
+/* ********* */
+.news-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.news-list {
+    display: grid;
+    gap: 18px;
+}
+
+.news-sidebar {
+    position: sticky;
+    top: 90px;
+}
+
+.news-card p {
+    line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+    .news-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .news-sidebar {
+        position: static;
+    }
+}
