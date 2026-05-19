@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Announcement | MMCI')
+@section('title', 'Edit Announcement| ' . $shortName)
 @section('page_title', 'Edit Announcement')
 
 @section('content')
@@ -13,53 +13,13 @@
         </div>
 
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.announcements.update', $announcement) }}">
+            <form method="POST"
+                  action="{{ route('admin.announcements.update', $announcement) }}"
+                  enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
-                <div class="form-group">
-                    <label class="form-label">Title</label>
-                    <input type="text"
-                           name="title"
-                           class="form-input"
-                           value="{{ old('title', $announcement->title) }}"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Content</label>
-                    <textarea name="content"
-                              class="form-input"
-                              rows="6"
-                              required>{{ old('content', $announcement->content) }}</textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <input type="text"
-                               name="category"
-                               class="form-input"
-                               value="{{ old('category', $announcement->category) }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-select">
-                            <option value="draft" @selected(old('status', $announcement->status) === 'draft')>Draft</option>
-                            <option value="published" @selected(old('status', $announcement->status) === 'published')>Published</option>
-                            <option value="archived" @selected(old('status', $announcement->status) === 'archived')>Archived</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Posted At</label>
-                    <input type="datetime-local"
-                           name="posted_at"
-                           class="form-input"
-                           value="{{ old('posted_at', optional($announcement->posted_at)->format('Y-m-d\TH:i')) }}">
-                </div>
+                @include('announcements::partials.form', ['announcement' => $announcement])
 
                 <div style="display:flex; gap:10px; margin-top:16px;">
                     <a href="{{ route('admin.announcements.index') }}" class="btn btn-ghost">Cancel</a>

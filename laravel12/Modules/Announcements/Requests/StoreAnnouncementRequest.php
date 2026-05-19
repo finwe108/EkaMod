@@ -32,8 +32,12 @@ class StoreAnnouncementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'     => ['required', 'string', 'max:255'],
-            'content'      => ['required', 'string'],
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['required', 'string'],
+            'category' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', 'in:draft,published,archived'],
+            'posted_at' => ['nullable', 'date'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }

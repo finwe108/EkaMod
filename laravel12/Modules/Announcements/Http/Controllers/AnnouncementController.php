@@ -65,18 +65,22 @@ class AnnouncementController extends Controller
      * @param StoreAnnouncementRequest $request
      * @return RedirectResponse
      */
-    public function store(StoreAnnouncementRequest $request, AnnouncementService $announcementService): RedirectResponse
-    {
+    public function store(
+        StoreAnnouncementRequest $request,
+        AnnouncementService $announcementService
+    ): RedirectResponse {
         $validated = $request->validated();
 
         /*
-        * The announcements.posted_by column currently references teachers.id.
-        * Admin users may not have a teacher record, so we keep this nullable
-        * until announcement author ownership is redesigned intentionally.
+        * posted_by currently references teachers.id, not users.id.
+        * Keep nullable for admin-created announcements.
         */
         $validated['posted_by'] = null;
 
-        $announcementService->create($validated);
+        $announcementService->create(
+            $validated,
+            $request->file('image')
+        );
 
         return redirect()
             ->route('admin.announcements.index')
@@ -106,11 +110,16 @@ class AnnouncementController extends Controller
      * @param Announcement $announcement
      * @return RedirectResponse
      */
-    public function update(UpdateAnnouncementRequest $request, Announcement $announcement, AnnouncementService $announcementService): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $announcementService->update($announcement, $validated);
+    public function update(
+        UpdateAnnouncementRequest $request,
+        Announcement $announcement,
+        AnnouncementService $announcementService
+    ): RedirectResponse {
+        $announcementService->update(
+            $announcement,
+            $request->validated(),
+            $request->file('image')
+        );
 
         return redirect()
             ->route('admin.announcements.index')
