@@ -53,3 +53,19 @@ database/*.sqlite
 # OS
 .DS_Store
 Thumbs.db
+
+# Laravel12 runtime/generated
+laravel12/bootstrap/cache/*
+!laravel12/bootstrap/cache/.gitignore
+
+laravel12/storage/framework/*
+!laravel12/storage/framework/.gitignore
+
+laravel12/storage/logs/*
+!laravel12/storage/logs/.gitignore
+
+laravel12/storage/app/public/*
+!laravel12/storage/app/public/.gitignore
+
+laravel12/storage/app/reports/*
+laravel12/database/*.sqlite
