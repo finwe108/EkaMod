@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Students\Http\Controllers\Admin\StudentDocumentController;
 use Modules\Students\Http\Controllers\Admin\StudentController;
 use Modules\Students\Http\Controllers\Admin\StudentCredentialController;
 
@@ -28,3 +29,9 @@ Route::put('students/{student}/credentials', [StudentCredentialController::class
 
 Route::post('students/{student}/credentials/create', [StudentCredentialController::class, 'store'])
     ->name('students.credentials.store');
+
+Route::post('students/{student}/documents/{documentRequirementRule}/upload', [StudentDocumentController::class, 'upload'])
+    ->name('students.documents.upload');
+
+Route::post('students/{student}/document-types/{documentType}/upload', [StudentDocumentController::class, 'uploadByDocumentType'])
+    ->name('students.document-types.upload');

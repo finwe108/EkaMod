@@ -3,7 +3,7 @@
 /node_modules
 /storage/*.key
 .env
-.env.*
+
 
 # logs
 /storage/logs
@@ -20,3 +20,36 @@
 
 # cache
 /bootstrap/cache/*.php
+
+.phpunit.result.cache
+
+# Laravel
+/vendor
+/node_modules
+
+# Environment
+.env
+.env.production
+
+# Runtime/cache
+bootstrap/cache/*.php
+storage/framework/*
+storage/logs/*
+storage/debugbar/*
+storage/app/reports/*
+storage/app/public/*
+storage/*.key
+
+# SQLite
+database/*.sqlite
+
+# PHPUnit
+.phpunit.result.cache
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
