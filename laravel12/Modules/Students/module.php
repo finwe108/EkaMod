@@ -11,7 +11,7 @@ return [
             'label' => 'Students',
             'route' => 'admin.students.index',
             'active' => 'admin.students.*',
-            'icon' => '🎓',
+            'icon' => 'academic-cap',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 110,

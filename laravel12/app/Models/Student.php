@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\DocumentRequest;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -112,5 +113,10 @@ class Student extends Model
     public function documents()
     {
         return $this->hasMany(\App\Models\StudentDocument::class);
+    }
+
+    public function documentRequests()
+    {
+        return $this->hasMany(DocumentRequest::class);
     }
 }

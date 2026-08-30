@@ -11,7 +11,7 @@ return [
             'label' => 'Document Types',
             'route' => 'admin.document-types.index',
             'active' => 'admin.document-types.*',
-            'icon' => '📄',
+            'icon' => 'receipt',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 30,

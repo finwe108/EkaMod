@@ -39,11 +39,17 @@ class SectionController extends Controller
 
         $schoolYearId = $request->school_year_id ?: optional($activeSchoolYear)->id;
 
-        $sections = Section::with(['gradeLevel', 'schoolYear', 'adviser'])
-            ->withCount('enrollments')
-            ->when($schoolYearId, function ($query) use ($schoolYearId) {
-                $query->where('school_year_id', $schoolYearId);
-            })
+        $sections = Section::with([
+                'gradeLevel',
+                'schoolYear',
+                'adviser',
+            ])
+            ->withCount([
+                'enrollments as enrolled_students_count' => function ($query) use ($schoolYearId) {
+                    $query->where('school_year_id', $schoolYearId);
+                },
+            ])
+            ->where('school_year_id', $schoolYearId)
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();

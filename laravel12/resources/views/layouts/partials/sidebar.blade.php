@@ -28,7 +28,9 @@
                 @foreach($section['items'] as $item)
                     <a href="{{ $item['url'] }}"
                        class="nav-item {{ $item['is_active'] ? 'active' : '' }}">
-                        <span class="icon">{{ $item['icon'] ?? '•' }}</span>
+                        <span class="icon">
+    <x-icon name="{{ $item['icon'] ?? 'default' }}" size="18" />
+</span>
 
                         <span style="flex:1;">
                             {{ $item['label'] }}

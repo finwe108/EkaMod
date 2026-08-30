@@ -11,7 +11,7 @@ return [
             'label' => 'Verify Documents',
             'route' => 'admin.student-documents.index',
             'active' => 'admin.student-documents.*',
-            'icon' => '✅',
+            'icon' => 'clipboard-document-list',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 150,

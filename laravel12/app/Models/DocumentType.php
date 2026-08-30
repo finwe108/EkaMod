@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\DocumentRequestItem;
 use Illuminate\Database\Eloquent\Model;
 
 class DocumentType extends Model
@@ -20,5 +21,10 @@ class DocumentType extends Model
     public function requirementRules()
     {
         return $this->hasMany(DocumentRequirementRule::class);
+    }
+
+    public function documentRequestItems()
+    {
+        return $this->hasMany(DocumentRequestItem::class);
     }
 }
