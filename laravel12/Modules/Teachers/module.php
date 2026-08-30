@@ -11,7 +11,7 @@ return [
             'label' => 'Faculty',
             'route' => 'admin.teachers.index',
             'active' => 'admin.teachers.*',
-            'icon' => '👨‍🏫',
+            'icon' => 'users',
             'roles' => ['super_admin', 'admin', 'hr'],
             'group' => 'Teachers',
             'order' => 300,

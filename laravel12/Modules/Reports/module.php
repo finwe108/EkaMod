@@ -11,7 +11,7 @@ return [
             'label' => 'SF1 Report',
             'route' => 'admin.reports.sf1.filter',
             'active' => 'admin.reports.sf1.*',
-            'icon' => '🧾',
+            'icon' => 'book-open',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Reports',
             'order' => 400,

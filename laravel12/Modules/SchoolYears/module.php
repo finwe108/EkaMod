@@ -11,7 +11,7 @@ return [
             'label' => 'School Years',
             'route' => 'admin.school_years.index',
             'active' => 'admin.school_years.*',
-            'icon' => '📅',
+            'icon' => 'calendar-days',
             'roles' => ['super_admin', 'admin'],
             'group' => 'Administration',
             'order' => 35,

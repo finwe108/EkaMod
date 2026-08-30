@@ -11,7 +11,7 @@ return [
             'label' => 'Document Rules',
             'route' => 'admin.document-requirement-rules.index',
             'active' => 'admin.document-requirement-rules.*',
-            'icon' => '📋',
+            'icon' => 'clipboard-document-list',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 21,

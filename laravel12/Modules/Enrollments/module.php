@@ -11,7 +11,7 @@ return [
             'label' => 'Enrollments',
             'route' => 'admin.enrollments.index',
             'active' => 'admin.enrollments.*',
-            'icon' => '🧾',
+            'icon' => 'receipt',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 130,

@@ -47,8 +47,9 @@
     <div class="card">
         <div class="card-header">
             <div>
-                <div class="card-title">{{ $section->name }}</div>
-                <div class="card-subtitle">Students enrolled in this section for the selected school year</div>
+                <div class="card-title">
+                    {{ $section->name }}
+                </div>
             </div>
         </div>
 

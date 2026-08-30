@@ -11,7 +11,7 @@ return [
             'label' => 'Sections',
             'route' => 'admin.sections.index',
             'active' => 'admin.sections.*',
-            'icon' => '🏫',
+            'icon' => 'users',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 150,

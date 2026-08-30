@@ -11,7 +11,7 @@ return [
             'label' => 'Notifications',
             'route' => 'notifications.index',
             'active' => 'notifications.*',
-            'icon' => '🔔',
+            'icon' => 'bell',
             'roles' => ['super_admin', 'admin', 'hr', 'registrar', 'teacher', 'student'],
             'group' => 'Overview',
             'order' => 9,

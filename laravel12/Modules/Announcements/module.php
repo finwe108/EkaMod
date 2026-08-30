@@ -11,7 +11,7 @@ return [
             'label' => 'Announcements',
             'route' => 'admin.announcements.index',
             'active' => 'admin.announcements.*',
-            'icon' => '📢',
+            'icon' => 'bell',
             'roles' => ['super_admin', 'admin', 'hr'],
             'group' => 'Administration',
             'order' => 20,

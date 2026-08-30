@@ -11,7 +11,7 @@ return [
             'label' => 'School Settings',
             'route' => 'admin.school-settings.edit',
             'active' => 'admin.school-settings.*',
-            'icon' => '🏫',
+            'icon' => 'building-office',
             'roles' => ['super_admin', 'admin'],
             'group' => 'Administration',
             'order' => 40,

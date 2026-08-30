@@ -49,7 +49,9 @@
                 <tbody>
                     @forelse($sections as $section)
                         <tr>
-                            <td>{{ $section->name }} <span class="badge badge-red">{{ $section->enrollments_count ?? 0 }}</span></td>
+                            <td>
+                                <strong>{{ $section->name }}</strong> <span class="badge badge-red">{{ $section->enrolled_students_count ?? 0 }}</span>
+                            </td>
                             <td>{{ $section->gradeLevel?->name }}</td>
                             <td>{{ $section->schoolYear?->name }}</td>
                             <td>

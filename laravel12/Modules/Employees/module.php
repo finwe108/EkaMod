@@ -11,7 +11,7 @@ return [
             'label' => 'Employees',
             'route' => 'admin.employees.index',
             'active' => 'admin.employees.*',
-            'icon' => '👥',
+            'icon' => 'users',
             'roles' => ['super_admin', 'admin', 'hr'],
             'group' => 'Administration',
             'order' => 3,

@@ -11,7 +11,7 @@ return [
             'label' => 'Subjects',
             'route' => 'admin.subjects.index',
             'active' => 'admin.subjects.*',
-            'icon' => '📚',
+            'icon' => 'book-open',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 120,

@@ -11,7 +11,7 @@ return [
             'label' => 'Dashboard',
             'route' => 'dashboard',
             'active' => 'dashboard',
-            'icon' => '⊞',
+            'icon' => 'dashboard',
             'roles' => ['super_admin', 'admin', 'hr', 'registrar', 'teacher', 'student'],
             'group' => 'Overview',
             'order' => 1,

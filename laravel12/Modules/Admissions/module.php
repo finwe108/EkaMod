@@ -11,7 +11,7 @@ return [
             'label' => 'Admission Applications',
             'route' => 'admin.admission_applications.index',
             'active' => 'admin.admission_applications.*',
-            'icon' => '📋',
+            'icon' => 'clipboard-document-list',
             'roles' => ['super_admin', 'admin', 'registrar'],
             'group' => 'Registrar',
             'order' => 10,
