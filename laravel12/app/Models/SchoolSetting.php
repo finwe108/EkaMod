@@ -19,6 +19,11 @@ class SchoolSetting extends Model
         'phone',
         'email',
         'address',
+        'document_request_sla_cutoff_time',
+    ];
+
+    protected $casts = [
+        'document_request_sla_cutoff_time' => 'datetime:H:i:s',
     ];
 
     public static function current(): self
@@ -36,6 +41,7 @@ class SchoolSetting extends Model
             'phone' => '',
             'email' => '',
             'address' => '',
+            'document_request_sla_cutoff_time' => '15:00:00',
         ]);
     }
 }

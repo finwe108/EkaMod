@@ -5,6 +5,7 @@ namespace Modules\DocumentRequests\Services;
 use App\Enums\DocumentRequestStatus;
 use App\Models\DocumentRequest;
 use App\Models\DocumentRequestStatusHistory;
+use App\Services\DocumentRequestSlaService;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -16,6 +17,11 @@ use InvalidArgumentException;
  */
 class DocumentRequestLifecycleService
 {
+    public function __construct(
+        protected DocumentRequestSlaService $slaService
+    ) {
+    }
+
     /**
      * Define the allowed lifecycle transitions.
      *
@@ -129,6 +135,37 @@ class DocumentRequestLifecycleService
             }
 
             $request->save();
+
+            if ($newStatus === DocumentRequestStatus::VERIFIED->value) {
+                $request->items()
+                    ->with('documentType')
+                    ->get()
+                    ->each(function ($item): void {
+                        $timestamps = $this->slaService->calculate(
+                            $item,
+                            now()
+                        );
+
+                        if ($timestamps === null) {
+                            return;
+                        }
+
+                        if (! $item->sla_started_at) {
+                            $item->sla_started_at = $timestamps['sla_started_at'];
+                        }
+
+                        if (! $item->sla_due_at) {
+                            $item->sla_due_at = $timestamps['sla_due_at'];
+                        }
+
+                        if ($item->isDirty([
+                            'sla_started_at',
+                            'sla_due_at',
+                        ])) {
+                            $item->save();
+                        }
+                    });
+            }
 
             DocumentRequestStatusHistory::create([
                 'document_request_id' => $request->id,

@@ -261,8 +261,14 @@ class DocumentRequestItemLifecycleService
             */
             $item->status = $targetStatus;
 
+            $transitionedAt = now();
+
             if (! $item->released_at) {
-                $item->released_at = now();
+                $item->released_at = $transitionedAt;
+            }
+
+            if (! $item->sla_completed_at) {
+                $item->sla_completed_at = $transitionedAt;
             }
 
             $item->released_to_name = $releasedToName;

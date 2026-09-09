@@ -17,6 +17,9 @@ class DocumentRequestItem extends Model
          * Item lifecycle.
          */
         'status',
+        'sla_started_at',
+        'sla_due_at',
+        'sla_completed_at',
         'processing_started_at',
         'processed_by_user_id',
         'ready_at',
@@ -41,6 +44,9 @@ class DocumentRequestItem extends Model
 
     protected $casts = [
         'status' => DocumentRequestItemStatus::class,
+        'sla_started_at' => 'datetime',
+        'sla_due_at' => 'datetime',
+        'sla_completed_at' => 'datetime',
         'processing_started_at' => 'datetime',
         'ready_at' => 'datetime',
         'released_at' => 'datetime',
