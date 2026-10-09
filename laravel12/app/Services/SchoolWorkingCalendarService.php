@@ -165,21 +165,65 @@ class SchoolWorkingCalendarService
      * Example with 3 working days:
      *
      * Monday 2:00 PM
-     * -> Monday Day 1
-     * -> Tuesday Day 2
-     * -> Wednesday Day 3
-     * -> Wednesday 3:00 PM due
+     * -> Tuesday Day 1
+     * -> Wednesday Day 2
+     * -> Thursday Day 3
+     * -> Thursday 3:00 PM due
      */
     public function calculateDueAt(
         CarbonInterface|string $verifiedAt,
         int $workingDays
     ): Carbon {
+        if ($workingDays < 1) {
+            throw new \InvalidArgumentException(
+                'Working days must be at least 1.'
+            );
+        }
+
         $start = $this->effectiveSlaStart($verifiedAt);
 
-        $dueDate = $this->addWorkingDays($start, $workingDays);
+        return $this->calculateDueAtFromSlaStart(
+            $start,
+            $workingDays
+        );
+    }
+
+    /**
+     * Calculate an SLA deadline from an already-established SLA start.
+     *
+     * The SLA start day does not count as Day 1.
+     *
+     * Example:
+     * - SLA starts Thursday
+     * - 3 working days
+     * - Friday = Day 1
+     * - Monday = Day 2
+     * - Tuesday = Day 3
+     * - Tuesday at cutoff = deadline
+     */
+    public function calculateDueAtFromSlaStart(
+        CarbonInterface|string $slaStartedAt,
+        int $workingDays
+    ): Carbon {
+        if ($workingDays < 1) {
+            throw new \InvalidArgumentException(
+                'Working days must be at least 1.'
+            );
+        }
+
+        $dueDate = $this->asCarbon($slaStartedAt);
+
+        for ($daysCounted = 0; $daysCounted < $workingDays; ) {
+            $dueDate->addDay();
+
+            if ($this->isWorkingDay($dueDate)) {
+                $daysCounted++;
+            }
+        }
 
         return $this->cutoffCarbon($dueDate);
     }
+
 
     /**
      * Convert a date/time value to Carbon.
