@@ -5,7 +5,7 @@ namespace Modules\DocumentRequests\Services;
 use App\Enums\DocumentRequestStatus;
 use App\Models\DocumentRequest;
 use App\Models\DocumentRequestStatusHistory;
-use App\Services\DocumentRequestSlaService;
+use Modules\DocumentRequests\Services\DocumentRequestSlaService;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 

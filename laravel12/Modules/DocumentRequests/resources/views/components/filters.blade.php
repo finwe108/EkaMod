@@ -1,33 +1,21 @@
 <div class="card document-filter-card mb-4">
-
     <div class="card-header">
         <div>
-            <div class="card-title">
-                Search & Work Queue
-            </div>
-
+            <div class="card-title">Search & Work Queue</div>
             <div class="card-subtitle">
                 Search by requester, student name, student ID,
-                LRN, request status, or document status.
+                LRN, request status, document status, or SLA status.
             </div>
         </div>
     </div>
 
     <div class="card-body">
-
-        <form
-            method="GET"
-            action="{{ route('admin.document-requests.index') }}"
-        >
-
+        <form method="GET" action="{{ route('admin.document-requests.index') }}">
             <div class="document-filter-grid">
 
                 {{-- SEARCH --}}
                 <div class="document-filter-field">
-
-                    <label for="search">
-                        Search
-                    </label>
+                    <label for="search">Search</label>
 
                     <input
                         type="text"
@@ -37,23 +25,20 @@
                         class="form-control"
                         placeholder="Request no., student, ID, LRN..."
                     >
-
                 </div>
-
 
                 {{-- REQUEST STATUS --}}
                 <div class="document-filter-field">
-
-                    <label for="status">
-                        Request Status
-                    </label>
+                    <label for="status">Request Status</label>
 
                     <select
                         id="status"
                         name="status"
                         class="form-control"
                     >
-                        <option value="">All Request Statuses</option>
+                        <option value="">
+                            All Request Statuses
+                        </option>
 
                         @foreach([
                             'pending' => 'Pending',
@@ -74,25 +59,21 @@
                             </option>
 
                         @endforeach
-
                     </select>
-
                 </div>
-
 
                 {{-- ITEM STATUS --}}
                 <div class="document-filter-field">
-
-                    <label for="item_status">
-                        Item Status
-                    </label>
+                    <label for="item_status">Item Status</label>
 
                     <select
                         id="item_status"
                         name="item_status"
                         class="form-control"
                     >
-                        <option value="">All Item Statuses</option>
+                        <option value="">
+                            All Item Statuses
+                        </option>
 
                         @foreach([
                             'pending' => 'Needs Processing',
@@ -111,15 +92,47 @@
                             </option>
 
                         @endforeach
-
                     </select>
-
                 </div>
 
+                {{-- SLA STATUS --}}
+                <div class="document-filter-field">
+                    <label for="sla">SLA Status</label>
+
+                    <select
+                        id="sla"
+                        name="sla"
+                        class="form-control"
+                    >
+                        <option value="">
+                            All SLA Statuses
+                        </option>
+
+                        <option
+                            value="overdue"
+                            @selected($slaStatus === 'overdue')
+                        >
+                            Overdue
+                        </option>
+
+                        <option
+                            value="due_soon"
+                            @selected($slaStatus === 'due_soon')
+                        >
+                            Due Soon
+                        </option>
+
+                        <option
+                            value="on_time"
+                            @selected($slaStatus === 'on_time')
+                        >
+                            On Time
+                        </option>
+                    </select>
+                </div>
 
                 {{-- ACTIONS --}}
                 <div class="document-filter-actions">
-
                     <button
                         type="submit"
                         class="btn btn-primary"
@@ -133,13 +146,9 @@
                     >
                         Clear Filters
                     </a>
-
                 </div>
 
             </div>
-
         </form>
-
     </div>
-
 </div>

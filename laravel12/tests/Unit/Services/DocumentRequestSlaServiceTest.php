@@ -224,6 +224,47 @@ class DocumentRequestSlaServiceTest extends TestCase
         );
     }
 
+    public function test_sla_recalculation_skips_items_with_missing_due_dates_for_manual_review(): void
+    {
+        $documentType = DocumentType::create([
+            'name' => 'Regression Test Document',
+            'sla_enabled' => true,
+            'sla_working_days' => 3,
+        ]);
+
+        $request = DocumentRequest::create([
+            'request_number' => 'DR-TEST-001',
+            'status' => 'processing',
+        ]);
+
+        $item = DocumentRequestItem::create([
+            'document_request_id' => $request->id,
+            'document_type_id' => $documentType->id,
+            'status' => DocumentRequestItemStatus::PROCESSING,
+            'sla_started_at' => '2026-10-08 09:00:00',
+            'sla_due_at' => null,
+            'sla_completed_at' => null,
+        ]);
+
+        $this->artisan('document-requests:sla-recalculate')
+            ->expectsOutputToContain(
+                "Item #{$item->id}: missing SLA due date"
+            )
+            ->expectsOutputToContain(
+                'SLA items skipped for manual review (missing due date): 1'
+            )
+            ->assertExitCode(0);
+
+        $item->refresh();
+
+        $this->assertNull($item->sla_due_at);
+
+        $this->assertSame(
+            '2026-10-08 09:00:00',
+            $item->sla_started_at->format('Y-m-d H:i:s')
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | SLA State

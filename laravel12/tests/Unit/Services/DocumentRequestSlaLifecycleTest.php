@@ -8,6 +8,7 @@ use App\Models\DocumentType;
 use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\DocumentRequests\Services\DocumentRequestSlaService;
 use Modules\DocumentRequests\Services\DocumentRequestItemLifecycleService;
 use Modules\DocumentRequests\Services\DocumentRequestLifecycleService;
 use Tests\TestCase;
@@ -54,7 +55,7 @@ class DocumentRequestSlaLifecycleTest extends TestCase
             $item->sla_started_at->format('Y-m-d H:i:s')
         );
         $this->assertSame(
-            '2026-09-08 15:00:00',
+            '2026-09-09 15:00:00',
             $item->sla_due_at->format('Y-m-d H:i:s')
         );
     }

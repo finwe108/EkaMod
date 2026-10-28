@@ -78,7 +78,8 @@ class SchoolWorkingCalendarService
      * Monday + 2 working days = Tuesday
      * Monday + 3 working days = Wednesday
      *
-     * This behavior matches the agreed SLA policy.
+     * This helper uses inclusive counting. SLA deadline calculations use
+     * a separate rule that excludes the SLA start day.
      */
     public function addWorkingDays(
         CarbonInterface|string $date,
@@ -130,14 +131,15 @@ class SchoolWorkingCalendarService
      *
      * Policy:
      *
-     * - Verified at or before the cutoff:
-     *   The verification date counts as Day 1.
+     * - Verified at or before the cutoff on a working day:
+     *   The SLA starts at the cutoff on the verification date.
+     *   This start day does not count as Day 1.
      *
      * - Verified after the cutoff:
-     *   The next working day becomes Day 1.
+     *   The SLA starts at the cutoff on the next working day.
      *
      * - Verification on a non-working day:
-     *   The next working day becomes Day 1.
+     *   The SLA starts at the cutoff on the next working day.
      *
      * The SLA anchor time is the configured cutoff time.
      */

@@ -19,8 +19,8 @@ use Modules\DocumentRequests\Requests\TransitionDocumentRequestRequest;
 use Modules\DocumentRequests\Services\DocumentRequestItemLifecycleService;
 use Modules\DocumentRequests\Services\DocumentRequestLifecycleService;
 use Modules\DocumentRequests\Services\DocumentRequestService;
+use Modules\DocumentRequests\Services\DocumentRequestSlaService;
 use InvalidArgumentException;
-
 
 /**
  * Displays and monitors registrar document requests.
@@ -37,6 +37,7 @@ class DocumentRequestController extends Controller
      *
      * - overall request status
      * - individual document item/work queue status
+     * - SLA status
      * - request number
      * - student name
      * - student ID
@@ -48,7 +49,7 @@ class DocumentRequestController extends Controller
      *
      * @return View
      */
-    public function index(): View
+    public function index(DocumentRequestSlaService $slaService): View
     {
         /*
          * ============================================================
@@ -63,6 +64,25 @@ class DocumentRequestController extends Controller
         $itemStatus = trim(
             (string) request('item_status')
         );
+
+        $slaStatus = trim(
+            (string) request('sla')
+        );
+
+        if (
+            $slaStatus !== ''
+            && ! in_array(
+                $slaStatus,
+                [
+                    DocumentRequestSlaService::FILTER_ON_TIME,
+                    DocumentRequestSlaService::FILTER_DUE_SOON,
+                    DocumentRequestSlaService::FILTER_OVERDUE,
+                ],
+                true
+            )
+        ) {
+            $slaStatus = '';
+        }
 
         $search = trim(
             (string) request('search')
@@ -317,6 +337,31 @@ class DocumentRequestController extends Controller
             );
         }
 
+        /*
+        * ============================================================
+        * SLA FILTER
+        * ============================================================
+        *
+        * The SLA filter operates at document-item level.
+        *
+        * A request appears when at least one of its document items
+        * matches the selected SLA state.
+        *
+        * Supported values:
+        *
+        * - on_time
+        * - due_soon
+        * - overdue
+        *
+        * Invalid values are treated as no SLA filter.
+        */
+
+        if ($slaStatus !== '') {
+            $slaService->applyRequestFilter(
+                $requestsQuery,
+                $slaStatus
+            );
+        }
 
         /*
          * ============================================================
@@ -332,6 +377,44 @@ class DocumentRequestController extends Controller
 
         /*
          * ============================================================
+         * SLA DISPLAY DATA
+         * ============================================================
+         *
+         * Prepare SLA information once in the controller/service
+         * layer rather than calculating it repeatedly inside Blade.
+         *
+         * Each document request item receives:
+         *
+         * - SLA status
+         * - SLA status label
+         * - SLA CSS class
+         * - remaining/overdue label
+         * - SLA due date
+         *
+         * Each request also receives an aggregate SLA summary.
+         */
+
+        $requests->getCollection()->transform(
+            function (DocumentRequest $request) use ($slaService) {
+
+                foreach ($request->items as $item) {
+
+                    $item->sla_display =
+                        $slaService->prepareItemForDisplay($item);
+                }
+
+
+                $request->sla_summary =
+                    $slaService->prepareRequestSummary($request);
+
+
+                return $request;
+            }
+        );
+
+
+        /*
+         * ============================================================
          * VIEW
          * ============================================================
          */
@@ -342,6 +425,7 @@ class DocumentRequestController extends Controller
                 'requests',
                 'requestStatus',
                 'itemStatus',
+                'slaStatus',
                 'search',
                 'totalRequests',
                 'needsProcessing',

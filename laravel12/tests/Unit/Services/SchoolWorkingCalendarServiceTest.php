@@ -184,7 +184,7 @@ class SchoolWorkingCalendarServiceTest extends TestCase
         );
     }
 
-    public function test_two_fifty_nine_pm_counts_current_working_day(): void
+    public function test_verification_before_cutoff_starts_sla_at_same_day_cutoff(): void
     {
         $start = $this->calendar->effectiveSlaStart(
             Carbon::parse('2026-09-07 14:59:00')
@@ -196,7 +196,7 @@ class SchoolWorkingCalendarServiceTest extends TestCase
         );
     }
 
-    public function test_three_pm_counts_current_working_day(): void
+    public function test_verification_at_cutoff_starts_sla_at_same_day_cutoff(): void
     {
         $start = $this->calendar->effectiveSlaStart(
             Carbon::parse('2026-09-07 15:00:00')
@@ -228,7 +228,7 @@ class SchoolWorkingCalendarServiceTest extends TestCase
         );
 
         $this->assertSame(
-            '2026-09-15 15:00:00',
+            '2026-09-16 15:00:00',
             $due->format('Y-m-d H:i:s')
         );
     }
@@ -241,7 +241,7 @@ class SchoolWorkingCalendarServiceTest extends TestCase
         );
 
         $this->assertSame(
-            '2026-09-16 15:00:00',
+            '2026-09-17 15:00:00',
             $due->format('Y-m-d H:i:s')
         );
     }
@@ -260,7 +260,26 @@ class SchoolWorkingCalendarServiceTest extends TestCase
         );
 
         $this->assertSame(
-            '2026-09-10 15:00:00',
+            '2026-09-11 15:00:00',
+            $due->format('Y-m-d H:i:s')
+        );
+    }
+
+    public function test_special_working_saturday_is_included_in_sla_calculation(): void
+    {
+        SchoolCalendarException::create([
+            'calendar_date' => '2026-09-12',
+            'is_working_day' => true,
+            'name' => 'Special Working Saturday',
+        ]);
+
+        $due = $this->calendar->calculateDueAt(
+            Carbon::parse('2026-09-10 14:00:00'),
+            3
+        );
+
+        $this->assertSame(
+            '2026-09-14 15:00:00',
             $due->format('Y-m-d H:i:s')
         );
     }

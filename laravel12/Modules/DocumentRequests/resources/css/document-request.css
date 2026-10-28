@@ -1,4 +1,3 @@
-
     /*
      * ============================================================
      * DOCUMENT REQUEST INDEX
@@ -764,6 +763,196 @@
     }
 
 
+    /*
+    * ============================================================
+    * DOCUMENT REQUEST SLA
+    * ============================================================
+    */
+
+    .document-work-item-status {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: flex-end;
+
+        flex-wrap: wrap;
+
+        gap: .35rem;
+
+        flex: 0 0 auto;
+    }
+
+
+    .document-sla-label {
+        display: inline-flex;
+
+        align-items: center;
+
+        flex: 0 0 auto;
+
+        padding: .22rem .42rem;
+
+        border-radius: .35rem;
+
+        font-size: .64rem;
+        font-weight: 700;
+
+        line-height: 1.2;
+
+        white-space: nowrap;
+    }
+
+
+    .document-sla-meta {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: flex-end;
+
+        flex-wrap: wrap;
+
+        gap: .25rem .6rem;
+
+        margin-left: auto;
+
+        color: #6c757d;
+
+        font-size: .65rem;
+
+        line-height: 1.3;
+
+        text-align: right;
+    }
+
+
+    /*
+    * SLA STATUS COLORS
+    */
+
+    .document-sla-on-time {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+
+    .document-sla-due-soon {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+
+    .document-sla-overdue {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+
+    .document-sla-completed-on-time {
+        background: #d2f4ea;
+        color: #087f5b;
+    }
+
+
+    .document-sla-completed-late {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+
+    .document-sla-not-started {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+
+
+    .document-sla-default {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+
+    /*
+    * ============================================================
+    * SLA SUMMARY
+    * ============================================================
+    */
+
+    .document-sla-summary {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: .3rem;
+
+        margin-top: .35rem;
+        margin-bottom: .45rem;
+    }
+
+
+    .document-sla-summary-item {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: .25rem;
+
+        padding: .22rem .42rem;
+
+        border-radius: .35rem;
+
+        font-size: .64rem;
+        font-weight: 600;
+
+        line-height: 1.2;
+    }
+
+
+    .document-sla-summary-count {
+        font-weight: 800;
+    }
+
+
+    /*
+     * SLA summary states.
+     */
+
+    .document-sla-overdue {
+        background: #f8d7da;
+
+        color: #842029;
+    }
+
+
+    .document-sla-due-soon {
+        background: #fff3cd;
+
+        color: #856404;
+    }
+
+
+    .document-sla-on-time {
+        background: #d1e7dd;
+
+        color: #0f5132;
+    }
+
+
+    .document-sla-completed-on-time {
+        background: #d2f4ea;
+
+        color: #087f5b;
+    }
+
+
+    .document-sla-completed-late {
+        background: #f8d7da;
+
+        color: #842029;
+    }
+
+
     .no-documents {
         color: #6c757d;
 
@@ -1174,6 +1363,31 @@
 
         .request-list-header {
             align-items: flex-start;
+        }
+
+        /*
+         * Stack document SLA information on narrow screens.
+         */
+        .document-work-item {
+            align-items: flex-start;
+
+            flex-wrap: wrap;
+        }
+
+
+        .document-work-item-status {
+            justify-content: flex-start;
+        }
+
+
+        .document-sla-meta {
+            width: 100%;
+
+            justify-content: flex-start;
+
+            margin-left: 0;
+
+            text-align: left;
         }
 
     }

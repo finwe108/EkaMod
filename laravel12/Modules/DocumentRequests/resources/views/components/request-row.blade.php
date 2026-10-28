@@ -59,6 +59,8 @@
             ucwords($requestStatusValue, '_')
         ),
     };
+
+    $sla = $request->sla_summary ?? [];
 @endphp
 
 <tr class="{{ $rowPriority }}">
@@ -74,9 +76,27 @@
         </a>
 
         @if($hasPendingWork)
+
             <span class="priority-indicator">
                 Needs Action
             </span>
+
+        @endif
+
+        @if($sla['overdue'] ?? 0)
+
+            <span class="document-sla-label document-sla-overdue">
+                {{ $sla['overdue'] }}
+                {{ Str::plural('Overdue Item', $sla['overdue']) }}
+            </span>
+
+        @elseif($sla['due_soon'] ?? 0)
+
+            <span class="document-sla-label document-sla-due-soon">
+                {{ $sla['due_soon'] }}
+                {{ Str::plural('Due Soon Item', $sla['due_soon']) }}
+            </span>
+
         @endif
 
     </td>
@@ -98,9 +118,11 @@
                 </span>
 
                 @if($request->student->lrn)
+
                     <span>
                         LRN: {{ $request->student->lrn }}
                     </span>
+
                 @endif
 
             </div>
@@ -124,9 +146,11 @@
         </div>
 
         @if($request->requester_relationship)
+
             <div class="requester-meta">
                 {{ $request->requester_relationship }}
             </div>
+
         @endif
 
     </td>
@@ -135,44 +159,145 @@
     {{-- DOCUMENTS --}}
     <td class="documents-cell">
 
-        @if($pendingCount || $processingCount || $readyCount || $releasedCount)
+        @if(
+            $pendingCount
+            || $processingCount
+            || $readyCount
+            || $releasedCount
+        )
 
             <div class="document-status-summary">
 
                 @if($pendingCount)
+
                     <span class="work-badge work-badge-pending">
+
                         <span class="work-badge-count">
                             {{ $pendingCount }}
                         </span>
-                        <span>Needs Processing</span>
+
+                        <span>
+                            Needs Processing
+                        </span>
+
                     </span>
+
                 @endif
 
                 @if($processingCount)
+
                     <span class="work-badge work-badge-processing">
+
                         <span class="work-badge-count">
                             {{ $processingCount }}
                         </span>
-                        <span>Processing</span>
+
+                        <span>
+                            Processing
+                        </span>
+
                     </span>
+
                 @endif
 
                 @if($readyCount)
+
                     <span class="work-badge work-badge-ready">
+
                         <span class="work-badge-count">
                             {{ $readyCount }}
                         </span>
-                        <span>Ready</span>
+
+                        <span>
+                            Ready
+                        </span>
+
                     </span>
+
                 @endif
 
                 @if($releasedCount)
+
                     <span class="work-badge work-badge-released">
+
                         <span class="work-badge-count">
                             {{ $releasedCount }}
                         </span>
-                        <span>Released</span>
+
+                        <span>
+                            Released
+                        </span>
+
                     </span>
+
+                @endif
+
+            </div>
+
+        @endif
+
+
+        {{-- SLA SUMMARY --}}
+        @if(
+            ($sla['overdue'] ?? 0)
+            || ($sla['due_soon'] ?? 0)
+            || ($sla['on_time'] ?? 0)
+            || ($sla['completed_on_time'] ?? 0)
+            || ($sla['completed_late'] ?? 0)
+        )
+
+            <div class="document-sla-summary">
+
+                @if($sla['overdue'] ?? 0)
+
+                    <span
+                        class="document-sla-summary-item document-sla-overdue"
+                    >
+                        {{ $sla['overdue'] }} Overdue
+                    </span>
+
+                @endif
+
+                @if($sla['due_soon'] ?? 0)
+
+                    <span
+                        class="document-sla-summary-item document-sla-due-soon"
+                    >
+                        {{ $sla['due_soon'] }} Due Soon
+                    </span>
+
+                @endif
+
+                @if($sla['on_time'] ?? 0)
+
+                    <span
+                        class="document-sla-summary-item document-sla-on-time"
+                    >
+                        {{ $sla['on_time'] }} On Time
+                    </span>
+
+                @endif
+
+                @if($sla['completed_on_time'] ?? 0)
+
+                    <span
+                        class="document-sla-summary-item document-sla-completed-on-time"
+                    >
+                        {{ $sla['completed_on_time'] }}
+                        Completed On Time
+                    </span>
+
+                @endif
+
+                @if($sla['completed_late'] ?? 0)
+
+                    <span
+                        class="document-sla-summary-item document-sla-completed-late"
+                    >
+                        {{ $sla['completed_late'] }}
+                        Completed Late
+                    </span>
+
                 @endif
 
             </div>
