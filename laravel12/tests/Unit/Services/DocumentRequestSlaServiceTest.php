@@ -516,6 +516,50 @@ class DocumentRequestSlaServiceTest extends TestCase
         );
     }
 
+    public function test_unfinished_item_under_cancelled_request_is_not_an_active_sla(): void
+    {
+        $item = $this->itemWithDocumentType([
+            'sla_enabled' => true,
+        ], [
+            'status' => DocumentRequestItemStatus::PROCESSING,
+            'sla_started_at' => '2026-09-07 15:00:00',
+            'sla_due_at' => '2026-09-09 15:00:00',
+        ]);
+
+        $item->setRelation(
+            'request',
+            new DocumentRequest([
+                'status' => 'cancelled',
+            ])
+        );
+
+        $now = Carbon::parse('2026-09-10 10:00:00');
+
+        $this->assertFalse(
+            $this->sla->hasActiveSla($item)
+        );
+
+        $this->assertSame(
+            DocumentRequestSlaService::STATUS_NOT_STARTED,
+            $this->sla->status($item, $now)
+        );
+
+        $this->assertFalse(
+            $this->sla->isOverdue($item, $now)
+        );
+
+        $this->assertFalse(
+            $this->sla->isDueSoon($item, $now)
+        );
+
+        $this->assertNull(
+            $this->sla->remaining($item, $now)
+        );
+
+        $this->assertNull(
+            $this->sla->recalculateDueAt($item)
+        );
+    }
     public function test_unavailable_item_is_not_an_active_sla(): void
     {
         $item = $this->itemWithDocumentType([
@@ -800,6 +844,13 @@ class DocumentRequestSlaServiceTest extends TestCase
             'sla_due_at' => '2026-09-09 15:00:00',
         ]);
 
+        DocumentRequestItem::create([
+            'document_request_id' => $cancelledRequest->id,
+            'document_type_id' => $documentType->id,
+            'status' => DocumentRequestItemStatus::PROCESSING,
+            'sla_started_at' => '2026-09-07 15:00:00',
+            'sla_due_at' => '2026-09-09 15:00:00',
+        ]);
         $query = DocumentRequest::query();
 
         $this->sla->applyRequestFilter(
@@ -986,5 +1037,36 @@ class DocumentRequestSlaServiceTest extends TestCase
 
             $table->index(['calendar_date', 'is_working_day']);
         });
+    }
+
+    public function test_completed_item_keeps_sla_history_when_parent_request_is_cancelled(): void
+    {
+        $item = $this->itemWithDocumentType([
+            'sla_enabled' => true,
+        ], [
+            'status' => DocumentRequestItemStatus::RELEASED,
+            'sla_started_at' => '2026-09-07 15:00:00',
+            'sla_due_at' => '2026-09-09 15:00:00',
+            'sla_completed_at' => '2026-09-09 14:00:00',
+        ]);
+
+        $item->setRelation(
+            'request',
+            new DocumentRequest([
+                'status' => 'cancelled',
+            ])
+        );
+
+        $this->assertSame(
+            DocumentRequestSlaService::STATUS_COMPLETED_ON_TIME,
+            $this->sla->status(
+                $item,
+                Carbon::parse('2026-09-10 10:00:00')
+            )
+        );
+
+        $this->assertFalse(
+            $this->sla->hasActiveSla($item)
+        );
     }
 }

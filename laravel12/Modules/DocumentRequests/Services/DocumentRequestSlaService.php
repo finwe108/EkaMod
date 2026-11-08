@@ -2,6 +2,7 @@
 
 namespace Modules\DocumentRequests\Services;
 
+use App\Enums\DocumentRequestStatus;
 use App\Enums\DocumentRequestItemStatus;
 use App\Models\DocumentRequest;
 use App\Models\DocumentRequestItem;
@@ -39,7 +40,8 @@ class DocumentRequestSlaService
     /**
      * Determine whether an item currently has an active SLA.
      *
-     * Cancelled and unavailable documents stop SLA monitoring.
+     * Cancelled parent requests, cancelled items, and unavailable
+     * documents stop active SLA monitoring.
      */
     public function hasActiveSla(DocumentRequestItem $item): bool
     {
@@ -54,7 +56,8 @@ class DocumentRequestSlaService
                     DocumentRequestItemStatus::CANCELLED,
                 ],
                 true
-            );
+            )
+            && $item->request?->status !== DocumentRequestStatus::CANCELLED->value;
     }
 
     /**
@@ -127,24 +130,10 @@ class DocumentRequestSlaService
             return self::STATUS_NOT_STARTED;
         }
 
-        if (
-            in_array(
-                $item->status,
-                [
-                    DocumentRequestItemStatus::UNAVAILABLE,
-                    DocumentRequestItemStatus::CANCELLED,
-                ],
-                true
-            )
-            && $item->sla_completed_at === null
-        ) {
-            return self::STATUS_NOT_STARTED;
-        }
-
-        $now = $now
-            ? Carbon::instance($now)
-            : now();
-
+        /*
+         * A completed item keeps its historical SLA result even if
+         * the parent request is subsequently cancelled.
+         */
         if ($item->sla_completed_at !== null) {
             return $item->sla_completed_at->lessThanOrEqualTo(
                 $item->sla_due_at
@@ -152,6 +141,28 @@ class DocumentRequestSlaService
                 ? self::STATUS_COMPLETED_ON_TIME
                 : self::STATUS_COMPLETED_LATE;
         }
+
+        /*
+         * An unfinished item is no longer monitored when either
+         * the parent request or the individual item is cancelled.
+         */
+        if (
+            $item->request?->status === DocumentRequestStatus::CANCELLED->value
+            || in_array(
+                $item->status,
+                [
+                    DocumentRequestItemStatus::UNAVAILABLE,
+                    DocumentRequestItemStatus::CANCELLED,
+                ],
+                true
+            )
+        ) {
+            return self::STATUS_NOT_STARTED;
+        }
+
+        $now = $now
+            ? Carbon::instance($now)
+            : now();
 
         if ($now->greaterThan($item->sla_due_at)) {
             return self::STATUS_OVERDUE;
@@ -171,7 +182,8 @@ class DocumentRequestSlaService
      * when at least one of its items matches the requested SLA state.
      *
      * Completed, cancelled, and unavailable items are not considered
-     * active SLA work for these filters.
+     * active SLA work for these filters. Cancelled parent requests
+     * are also excluded.
      */
     public function applyRequestFilter(
         Builder $query,
@@ -191,41 +203,62 @@ class DocumentRequestSlaService
 
         $now = now();
 
-        return $query->whereHas(
-            'items',
-            function (Builder $itemQuery) use ($status, $now) {
+        return $query
+            ->where(
+                'status',
+                '!=',
+                DocumentRequestStatus::CANCELLED->value
+            )
+            ->whereHas(
+                'items',
+                function (Builder $itemQuery) use ($status, $now) {
 
-                $itemQuery
-                    ->whereHas(
-                        'documentType',
-                        function (Builder $documentTypeQuery) {
-                            $documentTypeQuery->where(
-                                'sla_enabled',
-                                true
+                    $itemQuery
+                        ->whereHas(
+                            'documentType',
+                            function (Builder $documentTypeQuery) {
+                                $documentTypeQuery->where(
+                                    'sla_enabled',
+                                    true
+                                );
+                            }
+                        )
+                        ->whereNotNull('sla_started_at')
+                        ->whereNotNull('sla_due_at')
+                        ->whereNull('sla_completed_at')
+                        ->whereNotIn('status', [
+                            DocumentRequestItemStatus::UNAVAILABLE->value,
+                            DocumentRequestItemStatus::CANCELLED->value,
+                        ]);
+
+                    if ($status === self::FILTER_OVERDUE) {
+                        $itemQuery->where(
+                            'sla_due_at',
+                            '<',
+                            $now
+                        );
+
+                        return;
+                    }
+
+                    $dueSoonBoundary = $this->dueSoonBoundary($now);
+
+                    if ($status === self::FILTER_DUE_SOON) {
+                        $itemQuery
+                            ->where(
+                                'sla_due_at',
+                                '>=',
+                                $now
+                            )
+                            ->where(
+                                'sla_due_at',
+                                '<=',
+                                $dueSoonBoundary
                             );
-                        }
-                    )
-                    ->whereNotNull('sla_started_at')
-                    ->whereNotNull('sla_due_at')
-                    ->whereNull('sla_completed_at')
-                    ->whereNotIn('status', [
-                        DocumentRequestItemStatus::UNAVAILABLE->value,
-                        DocumentRequestItemStatus::CANCELLED->value,
-                    ]);
 
-                if ($status === self::FILTER_OVERDUE) {
-                    $itemQuery->where(
-                        'sla_due_at',
-                        '<',
-                        $now
-                    );
+                        return;
+                    }
 
-                    return;
-                }
-
-                $dueSoonBoundary = $this->dueSoonBoundary($now);
-
-                if ($status === self::FILTER_DUE_SOON) {
                     $itemQuery
                         ->where(
                             'sla_due_at',
@@ -234,26 +267,11 @@ class DocumentRequestSlaService
                         )
                         ->where(
                             'sla_due_at',
-                            '<=',
+                            '>',
                             $dueSoonBoundary
                         );
-
-                    return;
                 }
-
-                $itemQuery
-                    ->where(
-                        'sla_due_at',
-                        '>=',
-                        $now
-                    )
-                    ->where(
-                        'sla_due_at',
-                        '>',
-                        $dueSoonBoundary
-                    );
-            }
-        );
+            );
     }
 
     /**
