@@ -573,10 +573,26 @@
                     {{ $documentRequest->student->lrn }}
                 </div>
 
+            @elseif($documentRequest->isLegacyStudent() && $documentRequest->student_display_name !== '')
+
+                <strong>
+                    {{ $documentRequest->student_display_name }}
+                </strong>
+
+                <div class="text-muted">
+                    Pre-System Student
+                </div>
+
+                @if($documentRequest->student_display_identifier)
+                    <div class="text-muted">
+                        {{ $documentRequest->student_display_identifier }}
+                    </div>
+                @endif
+
             @else
 
                 <span class="text-muted">
-                    Student record unavailable.
+                    Student identity not recorded.
                 </span>
 
             @endif

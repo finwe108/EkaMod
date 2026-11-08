@@ -127,10 +127,30 @@
 
             </div>
 
+        @elseif($request->isLegacyStudent() && $request->student_display_name !== '')
+
+            <div class="student-name">
+                {{ $request->student_display_name }}
+            </div>
+
+            <div class="student-meta">
+
+                <span>
+                    Pre-System Student
+                </span>
+
+                @if($request->student_display_identifier)
+                    <span>
+                        {{ $request->student_display_identifier }}
+                    </span>
+                @endif
+
+            </div>
+
         @else
 
             <div class="student-name unavailable">
-                Student record unavailable
+                Student identity not recorded
             </div>
 
         @endif
