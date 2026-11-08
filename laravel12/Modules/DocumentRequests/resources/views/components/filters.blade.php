@@ -22,7 +22,7 @@
                         id="search"
                         name="search"
                         value="{{ $search }}"
-                        class="form-control"
+                        class="form-input"
                         placeholder="Request no., student, ID, LRN..."
                     >
                 </div>
@@ -34,7 +34,7 @@
                     <select
                         id="status"
                         name="status"
-                        class="form-control"
+                        class="form-input"
                     >
                         <option value="">
                             All Request Statuses
@@ -69,7 +69,7 @@
                     <select
                         id="item_status"
                         name="item_status"
-                        class="form-control"
+                        class="form-input"
                     >
                         <option value="">
                             All Item Statuses
@@ -102,7 +102,7 @@
                     <select
                         id="sla"
                         name="sla"
-                        class="form-control"
+                        class="form-input"
                     >
                         <option value="">
                             All SLA Statuses
