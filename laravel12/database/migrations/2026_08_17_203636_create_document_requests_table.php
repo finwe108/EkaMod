@@ -16,9 +16,9 @@ return new class extends Migration
 
             $table->string('request_number', 30)->unique();
 
-            $table->foreignId('student_id')
-                ->constrained('students')
-                ->restrictOnDelete();
+            // The students table is created by a later migration.
+            // Its foreign key is added after that migration has run.
+            $table->foreignId('student_id');
 
             $table->foreignId('requested_by_user_id')
                 ->nullable()
