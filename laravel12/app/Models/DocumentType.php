@@ -12,10 +12,14 @@ class DocumentType extends Model
         'description',
         'is_active',
         'sort_order',
+        'sla_enabled',
+        'sla_working_days',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'sla_enabled' => 'boolean',
+        'sla_working_days' => 'integer',
     ];
 
     public function requirementRules()
