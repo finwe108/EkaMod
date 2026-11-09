@@ -3,6 +3,7 @@
 namespace Modules\DocumentRequests\Services;
 
 use App\Enums\DocumentRequestItemStatus;
+use App\Models\DocumentRequest;
 use App\Models\DocumentRequestItem;
 use App\Models\DocumentRequestItemStatusHistory;
 use Illuminate\Support\Facades\DB;
@@ -116,7 +117,11 @@ class DocumentRequestItemLifecycleService
             * We use the relationship instead of relying on a previously
             * loaded model so the aggregator works with the current parent.
             */
-            $documentRequest = $item->request()->firstOrFail();
+            $documentRequest = $item->request()
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureParentRequestIsActive($documentRequest);
 
             /*
             * Mark the beginning of actual preparation.
@@ -254,7 +259,11 @@ class DocumentRequestItemLifecycleService
             /*
             * Get the parent request inside the transaction.
             */
-            $documentRequest = $item->request()->firstOrFail();
+            $documentRequest = $item->request()
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureParentRequestIsActive($documentRequest);
 
             /*
             * Record the item's release.
@@ -358,7 +367,11 @@ class DocumentRequestItemLifecycleService
             * Get the parent request inside the transaction so the
             * aggregate status can be refreshed after this item changes.
             */
-            $documentRequest = $item->request()->firstOrFail();
+            $documentRequest = $item->request()
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureParentRequestIsActive($documentRequest);
 
             /*
             * Record the unavailable outcome for this specific item.
@@ -425,6 +438,27 @@ class DocumentRequestItemLifecycleService
         );
     }
 
+    /**
+     * Prevent item lifecycle changes after a parent request
+     * has been rejected or cancelled.
+     *
+     * @throws InvalidArgumentException
+     */
+    protected function ensureParentRequestIsActive(
+        DocumentRequest $documentRequest
+    ): void {
+        $requestStatus = $documentRequest->status instanceof \BackedEnum
+            ? $documentRequest->status->value
+            : $documentRequest->status;
+
+        if (in_array($requestStatus, ['rejected', 'cancelled'], true)) {
+            throw new InvalidArgumentException(
+                'This document request has been '
+                . $requestStatus
+                . '. Its individual documents can no longer be changed.'
+            );
+        }
+    }
     /**
      * Resolve a string or enum into the canonical item status enum.
      *

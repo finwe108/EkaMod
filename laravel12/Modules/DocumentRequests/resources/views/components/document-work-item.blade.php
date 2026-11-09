@@ -1,5 +1,15 @@
 @php
-    $itemStatus = $item->status->value ?? $item->status;
+    $requestStatus = $requestStatus ?? null;
+
+    $isParentTerminal = in_array(
+        $requestStatus,
+        ['rejected', 'cancelled'],
+        true
+    );
+
+    $itemStatus = $isParentTerminal
+        ? $requestStatus
+        : ($item->status->value ?? $item->status);
 
     $itemStatusLabel = match ($itemStatus) {
         'pending' => 'Needs Processing',
@@ -7,7 +17,10 @@
         'ready_for_release' => 'Ready for Release',
         'released' => 'Released',
         'unavailable' => 'Unavailable',
-        'cancelled' => 'Cancelled',
+        'cancelled' => $isParentTerminal
+            ? 'Request Cancelled'
+            : 'Cancelled',
+        'rejected' => 'Request Rejected',
         default => str_replace(
             '_',
             ' ',
@@ -22,10 +35,13 @@
         'released' => 'document-status-released',
         'unavailable' => 'document-status-unavailable',
         'cancelled' => 'document-status-cancelled',
+        'rejected' => 'document-status-default',
         default => 'document-status-default',
     };
 
-    $sla = $item->sla_display ?? [];
+    $sla = $isParentTerminal
+        ? []
+        : ($item->sla_display ?? []);
 @endphp
 
 <div class="document-work-item">

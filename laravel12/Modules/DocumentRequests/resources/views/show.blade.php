@@ -23,6 +23,16 @@
         : $documentRequest->status;
 
     /*
+     * Rejected and cancelled are terminal parent-level states.
+     * They override the displayed status of every document item.
+     */
+    $isParentTerminal = in_array(
+        $requestStatus,
+        ['rejected', 'cancelled'],
+        true
+    );
+
+    /*
      * Overall document item counts.
      */
     $itemCounts = [
@@ -182,7 +192,7 @@
     {{-- ================================================================
         DOCUMENT PROGRESS SUMMARY
     ================================================================= --}}
-    @if($documentRequest->items->isNotEmpty())
+    @if(!$isParentTerminal && $documentRequest->items->isNotEmpty())
 
         <div class="card mb-4">
 
@@ -685,9 +695,28 @@
             @forelse($documentRequest->items as $item)
 
                 @php
+                    /*
+                     * Preserve the actual stored item status.
+                     * Only the displayed status is overridden when
+                     * the parent request is rejected or cancelled.
+                     */
                     $itemStatus = $item->status instanceof \BackedEnum
                         ? $item->status->value
                         : $item->status;
+
+                    $itemDisplayStatus = $isParentTerminal
+                        ? $requestStatus
+                        : $itemStatus;
+
+                    $itemDisplayStatusLabel = match ($itemDisplayStatus) {
+                        'rejected' => 'Request Rejected',
+                        'cancelled' => 'Request Cancelled',
+                        default => str_replace(
+                            '_',
+                            ' ',
+                            ucwords($itemDisplayStatus, '_')
+                        ),
+                    };
                 @endphp
 
                 <div class="card mb-3">
@@ -712,13 +741,7 @@
 
                                     <strong>Status:</strong>
 
-                                    {{
-                                        str_replace(
-                                            '_',
-                                            ' ',
-                                            ucwords($itemStatus, '_')
-                                        )
-                                    }}
+                                    {{ $itemDisplayStatusLabel }}
 
                                 </div>
 
@@ -728,11 +751,314 @@
 
 
                         {{-- ====================================================
-                            ITEM PENDING
+                            PARENT TERMINAL STATE OVERRIDE
                         ===================================================== --}}
-                        @if($itemStatus === 'pending')
+                        @if($isParentTerminal)
 
+                            @if($requestStatus === 'rejected')
+
+                                <div class="alert alert-danger mt-3 mb-0">
+                                    This document is part of a rejected request.
+
+                                    No further item processing or release is allowed.
+                                </div>
+
+                            @else
+
+                                <div class="alert alert-warning mt-3 mb-0">
+                                    This document is part of a cancelled request.
+
+                                    No further item processing or release is allowed.
+                                </div>
+
+                            @endif
+
+                        @else
+
+                            {{-- ====================================================
+                                ITEM PENDING
+                            ===================================================== --}}
+                            @if($itemStatus === 'pending')
+
+                                @if(
+                                    in_array(
+                                        $requestStatus,
+                                        [
+                                            'verified',
+                                            'processing',
+                                            'ready_for_release',
+                                        ],
+                                        true
+                                    )
+                                )
+
+                                    <p class="text-muted mt-3">
+                                        This document has not yet started
+                                        processing.
+                                    </p>
+
+                                    <form
+                                        method="POST"
+                                        action="{{ route(
+                                            'admin.document-requests.items.start-processing',
+                                            [
+                                                'documentRequest' => $documentRequest,
+                                                'documentRequestItem' => $item,
+                                            ]
+                                        ) }}"
+                                    >
+                                        @csrf
+
+                                        <div class="form-group">
+
+                                            <label class="form-label">
+                                                Processing Remarks
+                                            </label>
+
+                                            <textarea
+                                                name="remarks"
+                                                class="form-input"
+                                                rows="2"
+                                                placeholder="Optional remarks"
+                                            >{{ old('remarks') }}</textarea>
+
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-primary"
+                                        >
+                                            Start Processing
+                                        </button>
+
+                                    </form>
+
+                                @else
+
+                                    <div class="alert alert-secondary mt-3 mb-0">
+                                        Waiting for request verification.
+                                    </div>
+
+                                @endif
+
+
+                            {{-- ====================================================
+                                ITEM PROCESSING
+                            ===================================================== --}}
+                            @elseif($itemStatus === 'processing')
+
+                                <p class="text-muted mt-3">
+                                    This document is currently being prepared.
+                                </p>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route(
+                                        'admin.document-requests.items.ready-for-release',
+                                        [
+                                            'documentRequest' => $documentRequest,
+                                            'documentRequestItem' => $item,
+                                        ]
+                                    ) }}"
+                                >
+                                    @csrf
+
+                                    <div class="form-group">
+
+                                        <label class="form-label">
+                                            Completion Remarks
+                                        </label>
+
+                                        <textarea
+                                            name="remarks"
+                                            class="form-input"
+                                            rows="2"
+                                            placeholder="Optional completion remarks"
+                                        >{{ old('remarks') }}</textarea>
+
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary"
+                                    >
+                                        Mark Ready for Release
+                                    </button>
+
+                                </form>
+
+
+                            {{-- ====================================================
+                                ITEM READY FOR RELEASE
+                            ===================================================== --}}
+                            @elseif($itemStatus === 'ready_for_release')
+
+                                <div class="alert alert-success mt-3">
+                                    This document is ready for release.
+                                </div>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route(
+                                        'admin.document-requests.items.release',
+                                        [
+                                            'documentRequest' => $documentRequest,
+                                            'documentRequestItem' => $item,
+                                        ]
+                                    ) }}"
+                                >
+                                    @csrf
+
+                                    <div class="form-group">
+
+                                        <label class="form-label">
+                                            Released To
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="released_to_name"
+                                            class="form-input"
+                                            value="{{ old('released_to_name') }}"
+                                            required
+                                            placeholder="Name of person receiving this document"
+                                        >
+
+                                    </div>
+
+                                    <div class="form-group">
+
+                                        <label class="form-label">
+                                            Release Notes
+                                        </label>
+
+                                        <textarea
+                                            name="release_notes"
+                                            class="form-input"
+                                            rows="2"
+                                            placeholder="Optional release notes"
+                                        >{{ old('release_notes') }}</textarea>
+
+                                    </div>
+
+                                    <div class="form-group">
+
+                                        <label class="form-label">
+                                            Lifecycle Remarks
+                                        </label>
+
+                                        <textarea
+                                            name="remarks"
+                                            class="form-input"
+                                            rows="2"
+                                            placeholder="Optional lifecycle remarks"
+                                        >{{ old('remarks') }}</textarea>
+
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary"
+                                    >
+                                        Release Document
+                                    </button>
+
+                                </form>
+
+
+                            {{-- ====================================================
+                                ITEM RELEASED
+                            ===================================================== --}}
+                            @elseif($itemStatus === 'released')
+
+                                <div class="alert alert-success mt-3 mb-0">
+
+                                    <strong>
+                                        Released successfully.
+                                    </strong>
+
+                                    @if($item->released_at)
+
+                                        <br>
+
+                                        Released on
+                                        {{
+                                            $item->released_at
+                                                ->format('M d, Y h:i A')
+                                        }}.
+
+                                    @endif
+
+                                    @if($item->released_to_name)
+
+                                        <br>
+
+                                        Released to:
+                                        {{ $item->released_to_name }}.
+
+                                    @endif
+
+                                    @if($item->release_notes)
+
+                                        <br>
+
+                                        Notes:
+                                        {{ $item->release_notes }}
+
+                                    @endif
+
+                                </div>
+
+
+                            {{-- ====================================================
+                                ITEM UNAVAILABLE
+                            ===================================================== --}}
+                            @elseif($itemStatus === 'unavailable')
+
+                                <div class="alert alert-warning mt-3 mb-0">
+
+                                    <strong>
+                                        Document Unavailable.
+                                    </strong>
+
+                                    @if($item->unavailable_reason)
+
+                                        <br>
+
+                                        Reason:
+                                        {{ $item->unavailable_reason }}
+
+                                    @endif
+
+                                </div>
+
+
+                            {{-- ====================================================
+                                ITEM CANCELLED
+                            ===================================================== --}}
+                            @elseif($itemStatus === 'cancelled')
+
+                                <div class="alert alert-danger mt-3 mb-0">
+                                    This document item was cancelled.
+                                </div>
+
+                            @endif
+
+
+                            {{-- ====================================================
+                                ITEM UNAVAILABLE ACTION
+                            ===================================================== --}}
                             @if(
+                                in_array(
+                                    $itemStatus,
+                                    [
+                                        'pending',
+                                        'processing',
+                                        'ready_for_release',
+                                    ],
+                                    true
+                                )
+                                &&
                                 in_array(
                                     $requestStatus,
                                     [
@@ -744,430 +1070,156 @@
                                 )
                             )
 
-                                <p class="text-muted mt-3">
-                                    This document has not yet started
-                                    processing.
-                                </p>
+                                <hr>
 
-                                <form
-                                    method="POST"
-                                    action="{{ route(
-                                        'admin.document-requests.items.start-processing',
-                                        [
-                                            'documentRequest' => $documentRequest,
-                                            'documentRequestItem' => $item,
-                                        ]
-                                    ) }}"
-                                >
-                                    @csrf
+                                <details>
 
-                                    <div class="form-group">
+                                    <summary style="cursor:pointer;">
+                                        Mark this document unavailable
+                                    </summary>
 
-                                        <label class="form-label">
-                                            Processing Remarks
-                                        </label>
-
-                                        <textarea
-                                            name="remarks"
-                                            class="form-input"
-                                            rows="2"
-                                            placeholder="Optional remarks"
-                                        >{{ old('remarks') }}</textarea>
-
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-primary"
+                                    <form
+                                        method="POST"
+                                        action="{{ route(
+                                            'admin.document-requests.items.unavailable',
+                                            [
+                                                'documentRequest' => $documentRequest,
+                                                'documentRequestItem' => $item,
+                                            ]
+                                        ) }}"
+                                        class="mt-3"
                                     >
-                                        Start Processing
-                                    </button>
+                                        @csrf
 
-                                </form>
+                                        <div class="form-group">
 
-                            @else
+                                            <label class="form-label">
+                                                Reason
+                                            </label>
 
-                                <div class="alert alert-secondary mt-3 mb-0">
-                                    Waiting for request verification.
-                                </div>
+                                            <textarea
+                                                name="reason"
+                                                class="form-input"
+                                                rows="3"
+                                                required
+                                                placeholder="Explain why this document cannot be provided"
+                                            >{{ old('reason') }}</textarea>
+
+                                        </div>
+
+                                        <div class="form-group">
+
+                                            <label class="form-label">
+                                                Additional Remarks
+                                            </label>
+
+                                            <textarea
+                                                name="remarks"
+                                                class="form-input"
+                                                rows="2"
+                                                placeholder="Optional additional remarks"
+                                            >{{ old('remarks') }}</textarea>
+
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-warning"
+                                            onclick="return confirm('Mark this document as unavailable?');"
+                                        >
+                                            Mark Unavailable
+                                        </button>
+
+                                    </form>
+
+                                </details>
 
                             @endif
 
 
-                        {{-- ====================================================
-                            ITEM PROCESSING
-                        ===================================================== --}}
-                        @elseif($itemStatus === 'processing')
-
-                            <p class="text-muted mt-3">
-                                This document is currently being prepared.
-                            </p>
-
-                            <form
-                                method="POST"
-                                action="{{ route(
-                                    'admin.document-requests.items.ready-for-release',
+                            {{-- ====================================================
+                                ITEM CANCEL ACTION
+                            ===================================================== --}}
+                            @if(
+                                in_array(
+                                    $itemStatus,
                                     [
-                                        'documentRequest' => $documentRequest,
-                                        'documentRequestItem' => $item,
-                                    ]
-                                ) }}"
-                            >
-                                @csrf
-
-                                <div class="form-group">
-
-                                    <label class="form-label">
-                                        Completion Remarks
-                                    </label>
-
-                                    <textarea
-                                        name="remarks"
-                                        class="form-input"
-                                        rows="2"
-                                        placeholder="Optional completion remarks"
-                                    >{{ old('remarks') }}</textarea>
-
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                >
-                                    Mark Ready for Release
-                                </button>
-
-                            </form>
-
-
-                        {{-- ====================================================
-                            ITEM READY FOR RELEASE
-                        ===================================================== --}}
-                        @elseif($itemStatus === 'ready_for_release')
-
-                            <div class="alert alert-success mt-3">
-                                This document is ready for release.
-                            </div>
-
-                            <form
-                                method="POST"
-                                action="{{ route(
-                                    'admin.document-requests.items.release',
+                                        'pending',
+                                        'processing',
+                                        'ready_for_release',
+                                    ],
+                                    true
+                                )
+                                &&
+                                in_array(
+                                    $requestStatus,
                                     [
-                                        'documentRequest' => $documentRequest,
-                                        'documentRequestItem' => $item,
-                                    ]
-                                ) }}"
-                            >
-                                @csrf
+                                        'verified',
+                                        'processing',
+                                        'ready_for_release',
+                                    ],
+                                    true
+                                )
+                            )
 
-                                <div class="form-group">
+                                <hr>
 
-                                    <label class="form-label">
-                                        Released To
-                                    </label>
+                                <details>
 
-                                    <input
-                                        type="text"
-                                        name="released_to_name"
-                                        class="form-input"
-                                        value="{{ old('released_to_name') }}"
-                                        required
-                                        placeholder="Name of person receiving this document"
+                                    <summary style="cursor:pointer;">
+                                        Cancel this document
+                                    </summary>
+
+                                    <form
+                                        method="POST"
+                                        action="{{ route(
+                                            'admin.document-requests.items.cancel',
+                                            [
+                                                'documentRequest' => $documentRequest,
+                                                'documentRequestItem' => $item,
+                                            ]
+                                        ) }}"
+                                        class="mt-3"
                                     >
+                                        @csrf
 
-                                </div>
+                                        <div class="form-group">
 
-                                <div class="form-group">
+                                            <label class="form-label">
+                                                Reason for Cancellation
+                                            </label>
 
-                                    <label class="form-label">
-                                        Release Notes
-                                    </label>
+                                            <textarea
+                                                name="reason"
+                                                class="form-input"
+                                                rows="3"
+                                                required
+                                                placeholder="Explain why this document will no longer be processed"
+                                            >{{ old('reason') }}</textarea>
 
-                                    <textarea
-                                        name="release_notes"
-                                        class="form-input"
-                                        rows="2"
-                                        placeholder="Optional release notes"
-                                    >{{ old('release_notes') }}</textarea>
+                                        </div>
 
-                                </div>
+                                        <button
+                                            type="submit"
+                                            class="btn btn-danger"
+                                            onclick="return confirm('Cancel this document?');"
+                                        >
+                                            Cancel Document
+                                        </button>
 
-                                <div class="form-group">
+                                    </form>
 
-                                    <label class="form-label">
-                                        Lifecycle Remarks
-                                    </label>
+                                </details>
 
-                                    <textarea
-                                        name="remarks"
-                                        class="form-input"
-                                        rows="2"
-                                        placeholder="Optional lifecycle remarks"
-                                    >{{ old('remarks') }}</textarea>
-
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                >
-                                    Release Document
-                                </button>
-
-                            </form>
-
-
-                        {{-- ====================================================
-                            ITEM RELEASED
-                        ===================================================== --}}
-                        @elseif($itemStatus === 'released')
-
-                            <div class="alert alert-success mt-3 mb-0">
-
-                                <strong>
-                                    Released successfully.
-                                </strong>
-
-                                @if($item->released_at)
-
-                                    <br>
-
-                                    Released on
-                                    {{
-                                        $item->released_at
-                                            ->format('M d, Y h:i A')
-                                    }}.
-
-                                @endif
-
-                                @if($item->released_to_name)
-
-                                    <br>
-
-                                    Released to:
-                                    {{ $item->released_to_name }}.
-
-                                @endif
-
-                                @if($item->release_notes)
-
-                                    <br>
-
-                                    Notes:
-                                    {{ $item->release_notes }}
-
-                                @endif
-
-                            </div>
-
-
-                        {{-- ====================================================
-                            ITEM UNAVAILABLE
-                        ===================================================== --}}
-                        @elseif($itemStatus === 'unavailable')
-
-                            <div class="alert alert-warning mt-3 mb-0">
-
-                                <strong>
-                                    Document Unavailable.
-                                </strong>
-
-                                @if($item->unavailable_reason)
-
-                                    <br>
-
-                                    Reason:
-                                    {{ $item->unavailable_reason }}
-
-                                @endif
-
-                            </div>
-
-
-                        {{-- ====================================================
-                            ITEM CANCELLED
-                        ===================================================== --}}
-                        @elseif($itemStatus === 'cancelled')
-
-                            <div class="alert alert-danger mt-3 mb-0">
-                                This document item was cancelled.
-                            </div>
-
-                        @endif
-
-
-                        {{-- ====================================================
-                            ITEM UNAVAILABLE ACTION
-                        ===================================================== --}}
-                        @if(
-                            in_array(
-                                $itemStatus,
-                                [
-                                    'pending',
-                                    'processing',
-                                    'ready_for_release',
-                                ],
-                                true
-                            )
-                            &&
-                            in_array(
-                                $requestStatus,
-                                [
-                                    'verified',
-                                    'processing',
-                                    'ready_for_release',
-                                ],
-                                true
-                            )
-                        )
-
-                            <hr>
-
-                            <details>
-
-                                <summary style="cursor:pointer;">
-                                    Mark this document unavailable
-                                </summary>
-
-                                <form
-                                    method="POST"
-                                    action="{{ route(
-                                        'admin.document-requests.items.unavailable',
-                                        [
-                                            'documentRequest' => $documentRequest,
-                                            'documentRequestItem' => $item,
-                                        ]
-                                    ) }}"
-                                    class="mt-3"
-                                >
-                                    @csrf
-
-                                    <div class="form-group">
-
-                                        <label class="form-label">
-                                            Reason
-                                        </label>
-
-                                        <textarea
-                                            name="reason"
-                                            class="form-input"
-                                            rows="3"
-                                            required
-                                            placeholder="Explain why this document cannot be provided"
-                                        >{{ old('reason') }}</textarea>
-
-                                    </div>
-
-                                    <div class="form-group">
-
-                                        <label class="form-label">
-                                            Additional Remarks
-                                        </label>
-
-                                        <textarea
-                                            name="remarks"
-                                            class="form-input"
-                                            rows="2"
-                                            placeholder="Optional additional remarks"
-                                        >{{ old('remarks') }}</textarea>
-
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-warning"
-                                        onclick="return confirm('Mark this document as unavailable?');"
-                                    >
-                                        Mark Unavailable
-                                    </button>
-
-                                </form>
-
-                            </details>
-
-                        @endif
-
-
-                        {{-- ====================================================
-                            ITEM CANCEL ACTION
-                        ===================================================== --}}
-                        @if(
-                            in_array(
-                                $itemStatus,
-                                [
-                                    'pending',
-                                    'processing',
-                                    'ready_for_release',
-                                ],
-                                true
-                            )
-                            &&
-                            in_array(
-                                $requestStatus,
-                                [
-                                    'verified',
-                                    'processing',
-                                    'ready_for_release',
-                                ],
-                                true
-                            )
-                        )
-
-                            <hr>
-
-                            <details>
-
-                                <summary style="cursor:pointer;">
-                                    Cancel this document
-                                </summary>
-
-                                <form
-                                    method="POST"
-                                    action="{{ route(
-                                        'admin.document-requests.items.cancel',
-                                        [
-                                            'documentRequest' => $documentRequest,
-                                            'documentRequestItem' => $item,
-                                        ]
-                                    ) }}"
-                                    class="mt-3"
-                                >
-                                    @csrf
-
-                                    <div class="form-group">
-
-                                        <label class="form-label">
-                                            Reason for Cancellation
-                                        </label>
-
-                                        <textarea
-                                            name="reason"
-                                            class="form-input"
-                                            rows="3"
-                                            required
-                                            placeholder="Explain why this document will no longer be processed"
-                                        >{{ old('reason') }}</textarea>
-
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-danger"
-                                        onclick="return confirm('Cancel this document?');"
-                                    >
-                                        Cancel Document
-                                    </button>
-
-                                </form>
-
-                            </details>
+                            @endif
 
                         @endif
 
 
                         {{-- ====================================================
                             ITEM STATUS HISTORY
+                            Kept visible even when the parent request
+                            is rejected or cancelled.
                         ===================================================== --}}
                         @if($item->statusHistories->isNotEmpty())
 

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Schema;
 use Modules\DocumentRequests\Services\DocumentRequestSlaService;
 use Modules\DocumentRequests\Services\DocumentRequestItemLifecycleService;
 use Modules\DocumentRequests\Services\DocumentRequestLifecycleService;
+use InvalidArgumentException;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class DocumentRequestSlaLifecycleTest extends TestCase
@@ -157,6 +159,115 @@ class DocumentRequestSlaLifecycleTest extends TestCase
         $item->refresh();
 
         $this->assertNull($item->sla_completed_at);
+    }
+
+    public function test_terminal_parent_request_blocks_item_processing(): void
+    {
+        $service = app(DocumentRequestItemLifecycleService::class);
+
+        foreach (['rejected', 'cancelled'] as $parentStatus) {
+            $request = $this->requestWithStatus($parentStatus);
+            $item = $this->itemFor($request);
+
+            $exceptionThrown = false;
+
+            try {
+                $service->startProcessing($item);
+            } catch (InvalidArgumentException $exception) {
+                $exceptionThrown = true;
+            }
+
+            $this->assertTrue(
+                $exceptionThrown,
+                "Expected processing to be blocked for a {$parentStatus} request."
+            );
+
+            $item->refresh();
+
+            $this->assertSame('pending', $item->status->value);
+            $this->assertNull($item->processing_started_at);
+
+            $this->assertSame(
+                0,
+                DB::table('document_request_item_status_histories')
+                    ->where('document_request_item_id', $item->id)
+                    ->count()
+            );
+        }
+    }
+
+    public function test_terminal_parent_request_blocks_item_release(): void
+    {
+        $service = app(DocumentRequestItemLifecycleService::class);
+
+        foreach (['rejected', 'cancelled'] as $parentStatus) {
+            $request = $this->requestWithStatus($parentStatus);
+            $item = $this->itemFor($request, [], [
+                'status' => 'ready_for_release',
+            ]);
+
+            $exceptionThrown = false;
+
+            try {
+                $service->release($item, 'Jane Doe');
+            } catch (InvalidArgumentException $exception) {
+                $exceptionThrown = true;
+            }
+
+            $this->assertTrue(
+                $exceptionThrown,
+                "Expected release to be blocked for a {$parentStatus} request."
+            );
+
+            $item->refresh();
+
+            $this->assertSame('ready_for_release', $item->status->value);
+            $this->assertNull($item->released_at);
+            $this->assertNull($item->released_to_name);
+            $this->assertNull($item->sla_completed_at);
+
+            $this->assertSame(
+                0,
+                DB::table('document_request_item_status_histories')
+                    ->where('document_request_item_id', $item->id)
+                    ->count()
+            );
+        }
+    }
+
+    public function test_terminal_parent_request_blocks_item_unavailability(): void
+    {
+        $service = app(DocumentRequestItemLifecycleService::class);
+
+        foreach (['rejected', 'cancelled'] as $parentStatus) {
+            $request = $this->requestWithStatus($parentStatus);
+            $item = $this->itemFor($request);
+
+            $exceptionThrown = false;
+
+            try {
+                $service->markUnavailable($item, 'Document cannot be issued.');
+            } catch (InvalidArgumentException $exception) {
+                $exceptionThrown = true;
+            }
+
+            $this->assertTrue(
+                $exceptionThrown,
+                "Expected marking unavailable to be blocked for a {$parentStatus} request."
+            );
+
+            $item->refresh();
+
+            $this->assertSame('pending', $item->status->value);
+            $this->assertNull($item->unavailable_reason);
+
+            $this->assertSame(
+                0,
+                DB::table('document_request_item_status_histories')
+                    ->where('document_request_item_id', $item->id)
+                    ->count()
+            );
+        }
     }
 
     protected function requestWithStatus(string $status): DocumentRequest

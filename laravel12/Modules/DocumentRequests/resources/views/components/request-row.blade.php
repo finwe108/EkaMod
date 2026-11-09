@@ -19,18 +19,26 @@
         ->filter(fn ($status) => $status === 'released')
         ->count();
 
-    $hasPendingWork = $pendingCount > 0;
-
-    $rowPriority = match (true) {
-        $pendingCount > 0 => 'request-row-needs-work',
-        $processingCount > 0 => 'request-row-processing',
-        $readyCount > 0 => 'request-row-ready',
-        default => '',
-    };
-
     $requestStatusValue =
         $request->status->value
         ?? $request->status;
+
+    $isParentTerminal = in_array(
+        $requestStatusValue,
+        ['rejected', 'cancelled'],
+        true
+    );
+
+    $hasPendingWork = !$isParentTerminal && $pendingCount > 0;
+
+    $rowPriority = $isParentTerminal
+        ? ''
+        : match (true) {
+            $pendingCount > 0 => 'request-row-needs-work',
+            $processingCount > 0 => 'request-row-processing',
+            $readyCount > 0 => 'request-row-ready',
+            default => '',
+        };
 
     $requestStatusClass = match ($requestStatusValue) {
         'pending' => 'request-status-pending',
@@ -83,20 +91,18 @@
 
         @endif
 
-        @if($sla['overdue'] ?? 0)
-
-            <span class="document-sla-label document-sla-overdue">
-                {{ $sla['overdue'] }}
-                {{ Str::plural('Overdue Item', $sla['overdue']) }}
-            </span>
-
-        @elseif($sla['due_soon'] ?? 0)
-
-            <span class="document-sla-label document-sla-due-soon">
-                {{ $sla['due_soon'] }}
-                {{ Str::plural('Due Soon Item', $sla['due_soon']) }}
-            </span>
-
+        @if(!$isParentTerminal)
+            @if($sla['overdue'] ?? 0)
+                <span class="document-sla-label document-sla-overdue">
+                    {{ $sla['overdue'] }}
+                    {{ Str::plural('Overdue Item', $sla['overdue']) }}
+                </span>
+            @elseif($sla['due_soon'] ?? 0)
+                <span class="document-sla-label document-sla-due-soon">
+                    {{ $sla['due_soon'] }}
+                    {{ Str::plural('Due Soon Item', $sla['due_soon']) }}
+                </span>
+            @endif
         @endif
 
     </td>
@@ -331,7 +337,10 @@
 
                 @include(
                     'document_requests::components.document-work-item',
-                    ['item' => $item]
+                    [
+                        'item' => $item,
+                        'requestStatus' => $requestStatusValue,
+                    ]
                 )
 
             @empty
