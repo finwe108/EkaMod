@@ -237,7 +237,19 @@ class DocumentRequestController extends Controller
             ->count();
 
 
-        $needsProcessing = (clone $baseQuery)
+        /*
+         * Terminal parent requests remain visible in the overall
+         * request list, but their historical item statuses must
+         * not be counted as active work.
+         */
+        $activeWorkQuery = (clone $baseQuery)
+            ->whereNotIn('status', [
+                'rejected',
+                'cancelled',
+            ]);
+
+
+        $needsProcessing = (clone $activeWorkQuery)
             ->whereHas(
                 'items',
                 function ($query) {
@@ -250,7 +262,7 @@ class DocumentRequestController extends Controller
             ->count();
 
 
-        $currentlyProcessing = (clone $baseQuery)
+        $currentlyProcessing = (clone $activeWorkQuery)
             ->whereHas(
                 'items',
                 function ($query) {
@@ -263,7 +275,7 @@ class DocumentRequestController extends Controller
             ->count();
 
 
-        $readyForRelease = (clone $baseQuery)
+        $readyForRelease = (clone $activeWorkQuery)
             ->whereHas(
                 'items',
                 function ($query) {
@@ -276,7 +288,7 @@ class DocumentRequestController extends Controller
             ->count();
 
 
-        $releasedItems = (clone $baseQuery)
+        $releasedItems = (clone $activeWorkQuery)
             ->whereHas(
                 'items',
                 function ($query) {
@@ -324,6 +336,11 @@ class DocumentRequestController extends Controller
          */
 
         if ($itemStatus !== '') {
+
+            $requestsQuery->whereNotIn('status', [
+                'rejected',
+                'cancelled',
+            ]);
 
             $requestsQuery->whereHas(
                 'items',

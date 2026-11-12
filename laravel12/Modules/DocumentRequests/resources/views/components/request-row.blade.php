@@ -186,10 +186,13 @@
     <td class="documents-cell">
 
         @if(
-            $pendingCount
-            || $processingCount
-            || $readyCount
-            || $releasedCount
+            !$isParentTerminal
+            && (
+                $pendingCount
+                || $processingCount
+                || $readyCount
+                || $releasedCount
+            )
         )
 
             <div class="document-status-summary">
